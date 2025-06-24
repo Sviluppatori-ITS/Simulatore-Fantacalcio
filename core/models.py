@@ -74,3 +74,56 @@ class RosterSlot(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='roster')
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     is_starting = models.BooleanField(default=False)  # titolare o panchina
+
+class Manager(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='manager_profile')
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='manager', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.team.name if self.team else 'No Team'}"
+
+class Match(models.Model):
+    home_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='home_matches')
+    away_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='away_matches')
+    match_day = models.PositiveIntegerField()
+    home_score = models.PositiveIntegerField(null=True, blank=True)
+    away_score = models.PositiveIntegerField(null=True, blank=True)
+    played = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.home_team.name} vs {self.away_team.name} - Matchday {self.match_day} ({'Played' if self.played else 'Upcoming'})"
+
+class Season(models.Model):
+    league = models.ForeignKey(League, on_delete=models.CASCADE, related_name='seasons')
+    year = models.PositiveIntegerField()
+    is_active = models.BooleanField(default=True)  # Indica se la stagione è attiva
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.league.name} - Season {self.year} (Matchday {self.current_match_day})"
+
+class Tournament(models.Model):
+    name = models.CharField(max_length=100)
+    is_cup = models.BooleanField(default=False)  # Indica se è un torneo a eliminazione diretta
+    linked_competition = models.ForeignKey(
+        "self", null=True, blank=True, 
+        on_delete=models.SET_NULL, 
+        related_name='linked_tournaments'
+    )
+    relegation_enabled = models.BooleanField(default=False) # Indica se il torneo prevede la retrocessione
+    relegation_teams = models.PositiveIntegerField(default=0)  # Numero di squadre retrocesse
+    playoff_teams = models.PositiveIntegerField(default=0)  # Numero di squadre che partecipano ai playoff
+    playout_teams = models.PositiveIntegerField(default=0)  # Numero di squadre che partecipano ai playout
+
+    def __str__(self):
+        return self.name
+    
+
+    def __str__(self):
+        return f"{self.name} ({self.get_type_display()}) - {self.season.year}"
+
