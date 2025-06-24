@@ -75,6 +75,7 @@ class RosterSlot(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     is_starting = models.BooleanField(default=False)  # titolare o panchina
 
+
 class Manager(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='manager_profile')
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='manager', null=True, blank=True)
@@ -83,6 +84,7 @@ class Manager(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.team.name if self.team else 'No Team'}"
+
 
 class Match(models.Model):
     home_team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='home_matches')
@@ -97,6 +99,7 @@ class Match(models.Model):
     def __str__(self):
         return f"{self.home_team.name} vs {self.away_team.name} - Matchday {self.match_day} ({'Played' if self.played else 'Upcoming'})"
 
+
 class Season(models.Model):
     league = models.ForeignKey(League, on_delete=models.CASCADE, related_name='seasons')
     year = models.PositiveIntegerField()
@@ -107,23 +110,55 @@ class Season(models.Model):
     def __str__(self):
         return f"{self.league.name} - Season {self.year} (Matchday {self.current_match_day})"
 
+
 class Tournament(models.Model):
     name = models.CharField(max_length=100)
-    is_cup = models.BooleanField(default=False)  # Indica se è un torneo a eliminazione diretta
-    linked_competition = models.ForeignKey(
-        "self", null=True, blank=True, 
-        on_delete=models.SET_NULL, 
-        related_name='linked_tournaments'
+    is_cup = models.BooleanField(default=False)
+
+    parent_tournament = models.ForeignKey(
+        'self', null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='child_tournaments'
     )
-    relegation_enabled = models.BooleanField(default=False) # Indica se il torneo prevede la retrocessione
-    relegation_teams = models.PositiveIntegerField(default=0)  # Numero di squadre retrocesse
-    playoff_teams = models.PositiveIntegerField(default=0)  # Numero di squadre che partecipano ai playoff
-    playout_teams = models.PositiveIntegerField(default=0)  # Numero di squadre che partecipano ai playout
+
+    # Relegation/Promotion system
+    promotion_to = models.ForeignKey(
+        'self', null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='relegated_from'
+    )
+    relegation_to = models.ForeignKey(
+        'self', null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='promoted_from'
+    )
+
+    qualified_to = models.ManyToManyField(
+        'self',
+        symmetrical=False,
+        related_name='qualifies_from',
+        blank=True,
+        help_text="Tornei/cup in cui le migliori squadre si qualificano"
+    )
+
+    relegation_enabled = models.BooleanField(default=False)
+    relegation_teams = models.PositiveIntegerField(default=0)
+    playoff_teams = models.PositiveIntegerField(default=0)
+    playout_teams = models.PositiveIntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
-    
+
+
+class TournamentQualificationRule(models.Model):
+    from_tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='qualification_rules')
+    to_tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='qualified_from')
+    min_rank = models.PositiveIntegerField()  # ad es. 1
+    max_rank = models.PositiveIntegerField()  # ad es. 4
+    description = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
-        return f"{self.name} ({self.get_type_display()}) - {self.season.year}"
-
+        return f"{self.from_tournament.name} {self.min_rank}-{self.max_rank} → {self.to_tournament.name}"
