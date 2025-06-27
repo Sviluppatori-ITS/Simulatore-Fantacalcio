@@ -42,3 +42,4 @@ jobs:
           push-to-registry: false
           show-summary: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          subject-path: './'
