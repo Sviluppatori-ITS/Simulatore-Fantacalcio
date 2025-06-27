@@ -139,9 +139,38 @@ class TournamentQualificationRule(models.Model):
         return f"{self.from_tournament.name} {self.min_rank}-{self.max_rank} → {self.to_tournament.name}"
 
 
+from django.db import models
+
+# (valore, etichetta visibile)
+RULE_TYPE_CHOICES = [
+    ("point_win", "Punti Vittoria"),
+    ("point_draw", "Punti Pareggio"),
+    ("point_loss", "Punti Sconfitta"),
+    ("goal_diff", "Differenza Reti"),
+    ("red_cards", "Cartellini Rossi"),
+    ("yellow_cards", "Cartellini Gialli"),
+    ("head_to_head", "Scontri Diretti"),
+    ("away_goals", "Gol in Trasferta"),
+    ("draw", "Pareggi"),
+]
+
+# Mappa per logica di tipo (interno, non usato come choices)
+RULE_TYPE_LOGIC = {
+    "point_win": "integer",
+    "point_draw": "integer",
+    "point_loss": "integer",
+    "goal_diff": "integer",
+    "red_cards": "bool",
+    "yellow_cards": "bool",
+    "head_to_head": "bool",
+    "away_goals": "bool",
+    "draw": "bool",
+}
+
+
 class TournamentRule(models.Model):
-    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='rules')
-    rule_type = models.CharField(max_length=50, choices=[("point_win", "Punti Vittoria", "integer"), ("point_draw", "Punti Pareggio", "integer"), ("point_loss", "Punti Sconfitta", "integer"), ("goal_diff", "Differenza Reti", "integer"), ("red_cards", "Cartellini Rossi", "bool"), ("yellow_cards", "Cartellini Gialli", "bool"), ("head_to_head", "Scontri Diretti", "bool"), ("away_goals", "Gol in Trasferta", "bool"), ("draw", "Pareggi", "bool"), ...], help_text="Tipo di regola applicata nel torneo")
+    tournament = models.ForeignKey('Tournament', on_delete=models.CASCADE, related_name='rules')
+    rule_type = models.CharField(max_length=50, choices=RULE_TYPE_CHOICES, help_text="Tipo di regola applicata nel torneo")
     value = models.IntegerField(help_text="Valore della regola, ad esempio 3 punti per vittoria, 1 punto per pareggio, ecc.")
     boolean_value = models.BooleanField(default=False, help_text="Valore booleano per regole che richiedono un attivo/passivo")
     priority = models.PositiveIntegerField(default=0, help_text="Priorità della regola, più basso è il numero, più alta è la priorità")
@@ -155,9 +184,12 @@ class TournamentRule(models.Model):
         unique_together = ('tournament', 'rule_type')
 
     def save(self, *args, **kwargs):
-        if self.rule_type in "integer" and not isinstance(self.value, int):
+        logic_type = RULE_TYPE_LOGIC.get(self.rule_type)
+
+        if logic_type == "integer" and not isinstance(self.value, int):
             raise ValueError("Il valore deve essere un intero per le regole di tipo 'integer'")
-        if self.rule_type in "bool" and not isinstance(self.boolean_value, bool):
+
+        if logic_type == "bool" and not isinstance(self.boolean_value, bool):
             raise ValueError("Il valore deve essere un booleano per le regole di tipo 'bool'")
 
         super().save(*args, **kwargs)
@@ -195,7 +227,7 @@ class Player(models.Model):
     class Meta:
         verbose_name = "Giocatore"
         verbose_name_plural = "Giocatori"
-        ordering = ['name', 'surname', 'born']
+        ordering = ['person__name', 'person__surname', 'person__birth_date']
 
     def save(self, *args, **kwargs):
         if not self.overall:
@@ -305,20 +337,20 @@ class Formations(models.Model):
         unique_together = ('team', 'tournament', 'tactic_name')
         ordering = ['team', 'tournament', 'tactic_name']
 
-        def save(self, *args, **kwargs):
-            if self.is_default_formation and not self.default_formation:
-                # Se è una formazione predefinita, assicurati che esista una DefaultFormation
-                default_formation, created = DefaultFormation.objects.get_or_create(name=self.tactic_name, formation=self.tactic_name, description=f"Formazione predefinita per {self.tactic_name}")
-                self.default_formation = default_formation
+    def save(self, *args, **kwargs):
+        if self.is_default_formation and not self.default_formation:
+            # Se è una formazione predefinita, assicurati che esista una DefaultFormation
+            default_formation, created = DefaultFormation.objects.get_or_create(name=self.tactic_name, formation=self.tactic_name, description=f"Formazione predefinita per {self.tactic_name}")
+            self.default_formation = default_formation
 
-            elif not self.is_default_formation and self.default_formation:
-                # Se non è una formazione predefinita, rimuovi il riferimento alla DefaultFormation
-                self.default_formation = None
-                # Assicurati che il nome della formazione sia unico per la combinazione di squadra e torneo
-                if not self.tactic_name:
-                    self.tactic_name = "4-3-3"
+        elif not self.is_default_formation and self.default_formation:
+            # Se non è una formazione predefinita, rimuovi il riferimento alla DefaultFormation
+            self.default_formation = None
+            # Assicurati che il nome della formazione sia unico per la combinazione di squadra e torneo
+            if not self.tactic_name:
+                self.tactic_name = "4-3-3"
 
-            super().save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Formazione: {self.tactic_name} - {self.team.name} ({self.tournament.name})"
@@ -339,7 +371,7 @@ class DefaultFormation(models.Model):
 class Staff(models.Model):
     person = models.OneToOneField(Person, on_delete=models.CASCADE, related_name='staff_profile', help_text="Profilo del membro dello staff")
     team = models.ForeignKey(SeasonTeam, on_delete=models.CASCADE, related_name='staff')
-    role = models.CharField(max_length=50, choices=[('Coach', 'Allenatore'), ('Scout', 'Osservatore'), ...], help_text="Ruolo del membro dello staff")
+    role = models.CharField(max_length=50, choices=[('Coach', 'Allenatore'), ('Scout', 'Osservatore')], help_text="Ruolo del membro dello staff")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -431,8 +463,8 @@ class MatchEvent(models.Model):
         ('corner', 'Calcio d\'angolo'),
         ('offside', 'Fuorigioco'),
         ('save', 'Parata'),
-        ('clearance', 'Rinvio'),
-        ...
+        ('clearance', 'Rinvio')
+        # ...
     ])
     description = models.TextField(blank=True)
 
