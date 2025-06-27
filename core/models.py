@@ -48,6 +48,22 @@ class Season(models.Model):
         return f"{self.league.name} - Season {self.year} (Matchday {self.current_match_day})"
 
 
+class Trophy(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    trophy_img = models.ImageField(upload_to='trophies/', null=True, blank=True)  # Immagine del trofeo
+    awarded_to = models.ForeignKey('SeasonTeam', on_delete=models.CASCADE, related_name='trophies', null=True, blank=True)  # Squadra vincitrice
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def is_awarded(self):
+        return self.awarded_to is not None
+
+    def __str__(self):
+        return f"{self.name} - {self.awarded_to.name} ({self.tournament.name if self.tournament else 'No Tournament'})"
+
+
 class TournamentStructure(models.Model):
     is_cup = models.BooleanField(default=False)
     use_groups = models.BooleanField(default=False)
@@ -73,9 +89,10 @@ class Tournament(models.Model):
     name = models.CharField(max_length=100)  # Serie A, Coppa Italia, ecc.
     description = models.TextField(blank=True)
     structure = models.ForeignKey(TournamentStructure, on_delete=models.PROTECT)
-    season = models.ForeignKey(Season, on_delete=models.CASCADE, related_name='tournaments')
+    season = models.ForeignKey(Season, on_delete=models.CASCADE, related_name='tournament')
     teams = models.ManyToManyField(Team, related_name='tournaments', blank=True)  # Squadre partecipanti
     current_match_day = models.PositiveIntegerField(default=1)  # Giorno corrente del torneo
+    trophy = models.ForeignKey(Trophy, on_delete=models.SET_NULL, null=True, blank=True, related_name='tournament')  # Trofeo associato
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
