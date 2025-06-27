@@ -3,6 +3,31 @@ from django.contrib.auth.models import User
 from datetime import date
 
 
+class Person(models.Model):
+    name = models.CharField(max_length=100, help_text="Nome della persona")
+    surname = models.CharField(max_length=100, blank=True, help_text="Cognome della persona")
+    birth_date = models.DateField(help_text="Data di nascita della persona")
+    main_nationality = models.ForeignKey('Nationality', on_delete=models.SET_NULL, null=True, blank=True, help_text="Nazionalità principale della persona")
+    other_nationalities = models.ManyToManyField('Nationality', related_name='other_nationalities', blank=True, help_text="Altre nazionalità della persona")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def age(self):
+        if self.birth_date:
+            today = date.today()
+            years = today.year - self.birth_date.year
+
+            # Se il compleanno non è ancora arrivato quest'anno, sottrai 1
+            if (today.month, today.day) < (self.birth_date.month, self.birth_date.day):
+                years -= 1
+            return years
+        return None
+
+    def __str__(self):
+        return f"{self.name} {self.surname} ({self.email})"
+
+
 class Nationality(models.Model):
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=3, unique=True)  # Codice ISO della nazione
@@ -114,6 +139,33 @@ class TournamentQualificationRule(models.Model):
         return f"{self.from_tournament.name} {self.min_rank}-{self.max_rank} → {self.to_tournament.name}"
 
 
+class TournamentRule(models.Model):
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='rules')
+    rule_type = models.CharField(max_length=50, choices=[("point_win", "Punti Vittoria", "integer"), ("point_draw", "Punti Pareggio", "integer"), ("point_loss", "Punti Sconfitta", "integer"), ("goal_diff", "Differenza Reti", "integer"), ("red_cards", "Cartellini Rossi", "bool"), ("yellow_cards", "Cartellini Gialli", "bool"), ("head_to_head", "Scontri Diretti", "bool"), ("away_goals", "Gol in Trasferta", "bool"), ("draw", "Pareggi", "bool")], help_text="Tipo di regola applicata nel torneo")
+    value = models.IntegerField(help_text="Valore della regola, ad esempio 3 punti per vittoria, 1 punto per pareggio, ecc.")
+    boolean_value = models.BooleanField(default=False, help_text="Valore booleano per regole che richiedono un attivo/passivo")
+    priority = models.PositiveIntegerField(default=0, help_text="Priorità della regola, più basso è il numero, più alta è la priorità")
+    is_active = models.BooleanField(default=True, help_text="Indica se la regola è attiva")
+    description = models.TextField(blank=True, help_text="Descrizione della regola")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('tournament', 'rule_type')
+
+    def save(self, *args, **kwargs):
+        if self.rule_type in "integer" and not isinstance(self.value, int):
+            raise ValueError("Il valore deve essere un intero per le regole di tipo 'integer'")
+        if self.rule_type in "bool" and not isinstance(self.boolean_value, bool):
+            raise ValueError("Il valore deve essere un booleano per le regole di tipo 'bool'")
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.tournament.name} - {self.rule_type} ({self.value}) {'(Attiva)' if self.is_active else '(Inattiva)'}"
+
+
 class SeasonTeam(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='season_teams')
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='season_teams')
@@ -129,9 +181,7 @@ class SeasonTeam(models.Model):
 
 
 class Player(models.Model):
-    name = models.CharField(max_length=100, help_text="Nome del giocatore")  # Nome del giocatore
-    surname = models.CharField(max_length=100, blank=True, help_text="Cognome del giocatore")  # Cognome del giocatore
-    born = models.DateField(help_text="Data di nascita del giocatore")  # Data di nascita del giocatore
+    person = models.OneToOneField(Person, on_delete=models.CASCADE, related_name='player_profile', help_text="Profilo del giocatore")
     main_role = models.CharField(max_length=20, choices=[('P', 'Portiere'), ('D', 'Difensore'), ('C', 'Centrocampista'), ('A', 'Attaccante')], null=True, blank=True, help_text="Ruolo principale del giocatore")  # Ruolo principale del giocatore
     main_nationality = models.ForeignKey(Nationality, on_delete=models.CASCADE, related_name='players', help_text="Nazionalità principale del giocatore")  # Nazionalità principale
     other_nationalities = models.ManyToManyField(Nationality, related_name='other_players', blank=True, help_text="Altre nazionalità del giocatore, se esistenti")  # Altre nazionalità
@@ -141,17 +191,6 @@ class Player(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    def age(self):
-        if self.born:
-            today = date.today()
-            years = today.year - self.born.year
-
-            # Se il compleanno non è ancora arrivato quest'anno, sottrai 1
-            if (today.month, today.day) < (self.born.month, self.born.day):
-                years -= 1
-            return years
-        return None
 
     class Meta:
         verbose_name = "Giocatore"
@@ -199,7 +238,7 @@ class Player(models.Model):
         }
 
         # Modifica il valore in base all'età del giocatore
-        age = self.age()
+        age = self.person.age()
         if age is not None:
             if age < 20:
                 base_value *= 1.5
@@ -230,7 +269,7 @@ class Player(models.Model):
         return self.fanta_value()
 
     def __str__(self):
-        return f"{self.name} ({self.role}) - {self.main_nationality.name}"
+        return f"{self.person.name} ({self.role}) - {self.main_nationality.name}"
 
 
 class RosterSlot(models.Model):
@@ -238,9 +277,92 @@ class RosterSlot(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     is_starting = models.BooleanField(default=False)  # titolare o panchina
     role = models.CharField(max_length=20, choices=[('P', 'Portiere'), ('D', 'Difensore'), ('C', 'Centrocampista'), ('A', 'Attaccante')], default='C')
+    shirt_number = models.PositiveIntegerField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('team', 'player')
+        unique_together = ('team', 'shirt_number')
+        ordering = ['team', 'shirt_number']
+
+    def __str__(self):
+        return f"{self.player.name} ({self.role}) - {self.team.team.name} {'(Titolare)' if self.is_starting else '(Panchina)'}"
+
+
+class Formations(models.Model):
+    team = models.ForeignKey(SeasonTeam, on_delete=models.CASCADE)
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
+    tactic_name = models.CharField(max_length=100, default="4-3-3", help_text="Nome della formazione, es. '4-3-3', '3-5-2', ecc.")
+    is_default_formation = models.BooleanField(default=False, help_text="Indica se questa è la formazione predefinita per il torneo")
+    default_formation = models.ForeignKey('DefaultFormation', on_delete=models.SET_NULL, null=True, blank=True, related_name='default_formations', help_text="Formazione predefinita associata")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('team', 'tournament', 'tactic_name')
+        ordering = ['team', 'tournament', 'tactic_name']
+
+        def save(self, *args, **kwargs):
+            if self.is_default_formation and not self.default_formation:
+                # Se è una formazione predefinita, assicurati che esista una DefaultFormation
+                default_formation, created = DefaultFormation.objects.get_or_create(name=self.tactic_name, formation=self.tactic_name, description=f"Formazione predefinita per {self.tactic_name}")
+                self.default_formation = default_formation
+
+            elif not self.is_default_formation and self.default_formation:
+                # Se non è una formazione predefinita, rimuovi il riferimento alla DefaultFormation
+                self.default_formation = None
+                # Assicurati che il nome della formazione sia unico per la combinazione di squadra e torneo
+                if not self.tactic_name:
+                    self.tactic_name = "4-3-3"
+
+            super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Formazione: {self.tactic_name} - {self.team.name} ({self.tournament.name})"
+
+
+class DefaultFormation(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    formation = models.CharField(max_length=100, help_text="Formazione in formato '4-3-3', '3-5-2', ecc.")
+    description = models.TextField(blank=True, help_text="Descrizione della formazione")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Staff(models.Model):
+    person = models.OneToOneField(Person, on_delete=models.CASCADE, related_name='staff_profile', help_text="Profilo del membro dello staff")
+    team = models.ForeignKey(SeasonTeam, on_delete=models.CASCADE, related_name='staff')
+    role = models.CharField(max_length=50, choices=[('Coach', 'Allenatore'), ('Scout', 'Osservatore'), ...], help_text="Ruolo del membro dello staff")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.person.name} - {self.role} ({self.team.team.name})"
+
+
+class Transfer(models.Model):
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    from_team = models.ForeignKey(SeasonTeam, on_delete=models.CASCADE, related_name='transfers_out')
+    to_team = models.ForeignKey(SeasonTeam, on_delete=models.CASCADE, related_name='transfers_in')
+    fee = models.DecimalField(max_digits=6, decimal_places=2, help_text="Quota di trasferimento pagata per il giocatore")
+    transfer_date = models.DateField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('player', 'from_team', 'to_team', 'transfer_date')
+
+    def __str__(self):
+        return f"{self.player.person.name} transferred from {self.from_team.team.name} to {self.to_team.team.name} for {self.fee} on {self.transfer_date}"
 
 
 class Manager(models.Model):
