@@ -141,7 +141,7 @@ class TournamentQualificationRule(models.Model):
 
 class TournamentRule(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='rules')
-    rule_type = models.CharField(max_length=50, choices=[("point_win", "Punti Vittoria", "integer"), ("point_draw", "Punti Pareggio", "integer"), ("point_loss", "Punti Sconfitta", "integer"), ("goal_diff", "Differenza Reti", "integer"), ("red_cards", "Cartellini Rossi", "bool"), ("yellow_cards", "Cartellini Gialli", "bool"), ("head_to_head", "Scontri Diretti", "bool"), ("away_goals", "Gol in Trasferta", "bool"), ("draw", "Pareggi", "bool")], help_text="Tipo di regola applicata nel torneo")
+    rule_type = models.CharField(max_length=50, choices=[("point_win", "Punti Vittoria", "integer"), ("point_draw", "Punti Pareggio", "integer"), ("point_loss", "Punti Sconfitta", "integer"), ("goal_diff", "Differenza Reti", "integer"), ("red_cards", "Cartellini Rossi", "bool"), ("yellow_cards", "Cartellini Gialli", "bool"), ("head_to_head", "Scontri Diretti", "bool"), ("away_goals", "Gol in Trasferta", "bool"), ("draw", "Pareggi", "bool"), ...], help_text="Tipo di regola applicata nel torneo")
     value = models.IntegerField(help_text="Valore della regola, ad esempio 3 punti per vittoria, 1 punto per pareggio, ecc.")
     boolean_value = models.BooleanField(default=False, help_text="Valore booleano per regole che richiedono un attivo/passivo")
     priority = models.PositiveIntegerField(default=0, help_text="Priorità della regola, più basso è il numero, più alta è la priorità")
@@ -411,6 +411,40 @@ class MatchHistory(models.Model):
 
     def __str__(self):
         return f"Match Performance: {self.player.name} in {self.match.home_team.name} vs {self.match.away_team.name}"
+
+
+class MatchEvent(models.Model):
+    match = models.ForeignKey(Match, on_delete=models.CASCADE, related_name='events')
+    minute = models.PositiveIntegerField()
+    player = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True, blank=True)
+    team = models.ForeignKey(SeasonTeam, on_delete=models.CASCADE)
+    event_type = models.CharField(max_length=20, choices=[
+        ('goal', 'Goal'),
+        ('assist', 'Assist'),
+        ('yellow_card', 'Ammonizione'),
+        ('red_card', 'Espulsione'),
+        ('substitution', 'Sostituzione'),
+        ('injury', 'Infortunio'),
+        ('penalty', 'Rigore'),
+        ('own_goal', 'Autogol'),
+        ('foul', 'Fallo'),
+        ('corner', 'Calcio d\'angolo'),
+        ('offside', 'Fuorigioco'),
+        ('save', 'Parata'),
+        ('clearance', 'Rinvio'),
+        ...
+    ])
+    description = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['minute']
+        unique_together = ('match', 'minute', 'event_type', 'player')
+
+    def __str__(self):
+        return f"{self.event_type} at {self.minute}' - {self.match.home_team.name} vs {self.match.away_team.name} ({self.player.name if self.player else 'N/A'})"
 
 
 class Round(models.Model):
