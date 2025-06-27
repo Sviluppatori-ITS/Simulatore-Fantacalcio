@@ -336,6 +336,8 @@ class Formations(models.Model):
     class Meta:
         unique_together = ('team', 'tournament', 'tactic_name')
         ordering = ['team', 'tournament', 'tactic_name']
+        verbose_name = "Formazione"
+        verbose_name_plural = "Formazioni"
 
     def save(self, *args, **kwargs):
         if self.is_default_formation and not self.default_formation:
