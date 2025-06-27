@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from datetime import date
 
 
 class Nationality(models.Model):
@@ -128,15 +129,44 @@ class SeasonTeam(models.Model):
 
 
 class Player(models.Model):
-    name = models.CharField(max_length=100)
-    role = models.CharField(max_length=20, choices=[('P', 'Portiere'), ('D', 'Difensore'), ('C', 'Centrocampista'), ('A', 'Attaccante')])
-    main_nationality = models.ForeignKey(Nationality, on_delete=models.CASCADE, related_name='players')  # Nazionalità principale
-    other_nationalities = models.ManyToManyField(Nationality, related_name='other_players', blank=True)  # Altre nazionalità
-    value = models.DecimalField(max_digits=5, decimal_places=2)  # Valore di mercato o fantavalore
-    overall = models.PositiveSmallIntegerField(default=50)
+    name = models.CharField(max_length=100, help_text="Nome del giocatore")  # Nome del giocatore
+    surname = models.CharField(max_length=100, blank=True, help_text="Cognome del giocatore")  # Cognome del giocatore
+    born = models.DateField(help_text="Data di nascita del giocatore")  # Data di nascita del giocatore
+    main_role = models.CharField(max_length=20, choices=[('P', 'Portiere'), ('D', 'Difensore'), ('C', 'Centrocampista'), ('A', 'Attaccante')], null=True, blank=True, help_text="Ruolo principale del giocatore")  # Ruolo principale del giocatore
+    main_nationality = models.ForeignKey(Nationality, on_delete=models.CASCADE, related_name='players', help_text="Nazionalità principale del giocatore")  # Nazionalità principale
+    other_nationalities = models.ManyToManyField(Nationality, related_name='other_players', blank=True, help_text="Altre nazionalità del giocatore, se esistenti")  # Altre nazionalità
+    overall = models.PositiveSmallIntegerField(default=50, help_text="Overall del giocatore, da 1 a 100")  # Overall del giocatore, da 1 a 100
+    fanta_value = models.PositiveIntegerField(default=50000, help_text="Valore di fanta-mercato del giocatore")  # Valore di fanta-mercato del giocatore
+    value = models.PositiveIntegerField(default=0, help_text="Valore di mercato del giocatore")  # Valore di mercato del giocatore, calcolato in base all'overall e al ruolo
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def age(self):
+        if self.born:
+            today = date.today()
+            years = today.year - self.born.year
+
+            # Se il compleanno non è ancora arrivato quest'anno, sottrai 1
+            if (today.month, today.day) < (self.born.month, self.born.day):
+                years -= 1
+            return years
+        return None
+
+    class Meta:
+        verbose_name = "Giocatore"
+        verbose_name_plural = "Giocatori"
+        ordering = ['name', 'surname', 'born']
+
+    def save(self, *args, **kwargs):
+        if not self.overall:
+            self.overall = self.calculate_overall() or 50  # Calcola l'overall prima di salvare
+
+        # Calcola il valore di mercato prima di salvare
+        if not self.fanta_value:
+            self.fanta_value = int(self.fanta_value())
+
+        super().save(*args, **kwargs)
 
     def update_overall(self):
         self.overall = self.calculate_overall()
@@ -156,18 +186,58 @@ class Player(models.Model):
         normalized = min(100, max(1, round(raw_score)))  # tra 1 e 100
         return normalized
 
+    def fanta_value(self):
+        # Calcola il valore di mercato del giocatore basato su overall e ruolo
+        base_value = self.overall * 1000
+
+        # Moltiplicatore basato sul ruolo
+        role_multiplier = {
+            'P': 1.2,
+            'D': 1.1,
+            'C': 1.0,
+            'A': 1.3
+        }
+
+        # Modifica il valore in base all'età del giocatore
+        age = self.age()
+        if age is not None:
+            if age < 20:
+                base_value *= 1.5
+            elif age < 25:
+                base_value *= 1.2
+            elif age > 30:
+                base_value *= 1.0
+            elif age > 35:
+                base_value *= 0.8
+            elif age > 40:
+                base_value *= 0.5
+        else:
+            base_value *= 1.0  # Se l'età non è disponibile, usa il valore base
+
+        return base_value * role_multiplier.get(self.main_role, 1.0)
+
+    def update_fanta_value(self):
+        # Aggiorna il valore di mercato del giocatore
+        self.fanta_value = self.fanta_value()
+        self.save()
+
     @property
     def dynamic_overall(self):
         return self.calculate_overall()
+
+    @property
+    def dynamic_fanta_value(self):
+        return self.fanta_value()
 
     def __str__(self):
         return f"{self.name} ({self.role}) - {self.main_nationality.name}"
 
 
 class RosterSlot(models.Model):
-    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='roster')
+    team = models.ForeignKey(SeasonTeam, on_delete=models.CASCADE, related_name='roster')
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     is_starting = models.BooleanField(default=False)  # titolare o panchina
+    role = models.CharField(max_length=20, choices=[('P', 'Portiere'), ('D', 'Difensore'), ('C', 'Centrocampista'), ('A', 'Attaccante')], default='C')
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -198,6 +268,27 @@ class Match(models.Model):
 
     def __str__(self):
         return f"{self.home_team.name} vs {self.away_team.name} - Matchday {self.match_day} ({'Played' if self.played else 'Upcoming'})"
+
+
+class MatchHistory(models.Model):
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name="match_performances")
+    match = models.ForeignKey(Match, on_delete=models.CASCADE, related_name="performances")
+    rating = models.FloatField()
+    goals = models.PositiveIntegerField(default=0)
+    assists = models.PositiveIntegerField(default=0)
+    minutes_played = models.PositiveIntegerField(default=0)
+    is_starting = models.BooleanField(default=False)
+    yellow_cards = models.PositiveIntegerField(default=0)
+    red_cards = models.PositiveIntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('player', 'match')
+
+    def __str__(self):
+        return f"Match Performance: {self.player.name} in {self.match.home_team.name} vs {self.match.away_team.name}"
 
 
 class Round(models.Model):
