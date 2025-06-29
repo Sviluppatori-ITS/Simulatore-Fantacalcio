@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -128,4 +129,103 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+}
+
+# Logging configuration
+LOG_DIR = os.path.join(BASE_DIR, "logs")
+os.makedirs(LOG_DIR, exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] {levelname} {name}: {message}',
+            'style': '{',
+        },
+    },
+
+    'handlers': {
+        'file_django': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'django.log'),
+            'formatter': 'verbose',
+        },
+        'file_simulation': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'simulation.log'),
+            'formatter': 'verbose',
+        },
+        'file_player': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'player.log'),
+            'formatter': 'verbose',
+        },
+        'file_match': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'match.log'),
+            'formatter': 'verbose',
+        },
+        'file_transfer': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'transfer.log'),
+            'formatter': 'verbose',
+        },
+        'file_rules': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'rules.log'),
+            'formatter': 'verbose',
+        },
+        'file_other': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, '.other.log'),
+            'formatter': 'verbose',
+        },
+    },
+
+    'loggers': {
+        'django': {
+            'handlers': ['file_django'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'simulation': {
+            'handlers': ['file_simulation'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'player': {
+            'handlers': ['file_player'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'match': {
+            'handlers': ['file_match'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'transfer': {
+            'handlers': ['file_transfer'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'rules': {
+            'handlers': ['file_rules'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'other': {
+            'handlers': ['file_other'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
 }

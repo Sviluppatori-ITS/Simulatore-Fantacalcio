@@ -4,6 +4,7 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework.permissions import AllowAny
 from .models import League, Team, User
 from .serializers import LeagueSerializer, TeamSerializer
+import logging
 
 
 class LeagueViewSet(viewsets.ModelViewSet):
