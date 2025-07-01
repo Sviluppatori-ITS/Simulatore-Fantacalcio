@@ -229,3 +229,5 @@ LOGGING = {
         },
     },
 }
+
+# commit giornaliero
