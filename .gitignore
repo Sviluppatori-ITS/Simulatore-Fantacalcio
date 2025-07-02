@@ -22,9 +22,9 @@ Thumbs.db
 
 *.log
 
-*/migrations/__pycache__/
+# */migrations/__pycache__/
 */migrations/*.pyc
-*/migrations/*.py
-!*/migrations/__init__.py
+# */migrations/*.py
+# !*/migrations/__init__.py
 
 .idea
