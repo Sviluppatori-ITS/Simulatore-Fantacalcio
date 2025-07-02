@@ -153,6 +153,12 @@ LOGGING = {
             'filename': os.path.join(LOG_DIR, 'django.log'),
             'formatter': 'verbose',
         },
+        'file_tests': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'tests.log'),
+            'formatter': 'verbose',
+        },
         'file_simulation': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
@@ -196,6 +202,11 @@ LOGGING = {
             'handlers': ['file_django'],
             'level': 'INFO',
             'propagate': True,
+        },
+        'tests': {
+            'handlers': ['file_tests'],
+            'level': 'DEBUG',
+            'propagate': False,
         },
         'simulation': {
             'handlers': ['file_simulation'],
