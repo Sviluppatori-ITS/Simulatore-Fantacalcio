@@ -4,6 +4,10 @@
 #
 #    pip-compile requirements.in
 #
+amqp==5.3.1
+    # via
+    #   -r requirements.in
+    #   kombu
 appdirs==1.4.4
     # via
     #   -r requirements.in
@@ -29,6 +33,10 @@ beautifulsoup4==4.13.4
     # via
     #   -r requirements.in
     #   bs4
+billiard==4.2.1
+    # via
+    #   -r requirements.in
+    #   celery
 bs4==0.0.2
     # via
     #   -r requirements.in
@@ -37,6 +45,8 @@ build==1.2.2.post1
     # via
     #   -r requirements.in
     #   pip-tools
+celery==5.5.3
+    # via -r requirements.in
 certifi==2025.6.15
     # via
     #   -r requirements.in
@@ -53,7 +63,23 @@ charset-normalizer==3.4.2
 click==8.2.1
     # via
     #   -r requirements.in
+    #   celery
+    #   click-didyoumean
+    #   click-plugins
+    #   click-repl
     #   pip-tools
+click-didyoumean==0.3.1
+    # via
+    #   -r requirements.in
+    #   celery
+click-plugins==1.1.1.2
+    # via
+    #   -r requirements.in
+    #   celery
+click-repl==0.3.0
+    # via
+    #   -r requirements.in
+    #   celery
 crispy-bootstrap5==2025.6
     # via -r requirements.in
 cryptography==45.0.4
@@ -171,6 +197,10 @@ keyring==25.6.0
     # via
     #   -r requirements.in
     #   twine
+kombu==5.5.4
+    # via
+    #   -r requirements.in
+    #   celery
 lxml==5.3.1
     # via
     #   -r requirements.in
@@ -205,6 +235,7 @@ packaging==25.0
     # via
     #   -r requirements.in
     #   build
+    #   kombu
     #   twine
 parse==1.20.2
     # via
@@ -242,6 +273,7 @@ polib==1.2.0
 prompt-toolkit==3.0.51
     # via
     #   -r requirements.in
+    #   click-repl
     #   ipython
 psutil==7.0.0
     # via -r requirements.in
@@ -298,6 +330,7 @@ pysocks==1.7.1
 python-dateutil==2.9.0.post0
     # via
     #   -r requirements.in
+    #   celery
     #   perseus-core-library
 pytz==2025.2
     # via
@@ -402,6 +435,7 @@ tzdata==2025.2
     # via
     #   -r requirements.in
     #   faker
+    #   kombu
 unidecode==1.4.0
     # via
     #   -r requirements.in
@@ -413,6 +447,12 @@ urllib3[socks]==2.4.0
     #   requests
     #   selenium
     #   twine
+vine==5.1.0
+    # via
+    #   -r requirements.in
+    #   amqp
+    #   celery
+    #   kombu
 w3lib==2.3.1
     # via
     #   -r requirements.in
