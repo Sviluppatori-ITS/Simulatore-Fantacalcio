@@ -114,6 +114,7 @@ import logging
 import inspect
 import os
 from core.logger import get_logger
+import math
 
 
 class TournamentFactory:
@@ -182,29 +183,38 @@ class TournamentFactory:
                 round_obj.matches.add(match)
             giornata_counter += 1
 
+    import math
+
     def _generate_knockout(self, tournament):
         round_num = 1
         current_teams = self.teams.copy()
         random.shuffle(current_teams)
 
         while len(current_teams) > 1:
+            num_teams = len(current_teams)
+            power = 2 ** math.floor(math.log2(num_teams))
+            matches_to_play = (num_teams - power)  # Numero di match da giocare in questo turno
+            teams_in_match = matches_to_play * 2
+
+            # Se il numero è già una potenza di 2, fai tutte le partite
+            if matches_to_play == 0:
+                teams_in_match = num_teams
+
             round_obj = Round.objects.create(
                 tournament=tournament,
                 match_day=round_num,
-                label=self._round_label(len(current_teams)),
+                label=self._round_label(num_teams),
                 knockout_stage=True
             )
-            self.logger.info(f"Creata fase '{round_obj.label}' (round {round_num}) con {len(current_teams)} squadre.")
+            self.logger.info(f"Creata fase '{round_obj.label}' (round {round_num}) con {num_teams} squadre.")
+
             next_round_teams = []
 
-            for i in range(0, len(current_teams), 2):
-                if i + 1 >= len(current_teams):
-                    bye_team = current_teams[i]
-                    self.logger.info(f"Squadra {bye_team} passa turno per numero dispari.")
-                    next_round_teams.append(bye_team)
-                    continue
+            playing = current_teams[:teams_in_match]
+            advancing = current_teams[teams_in_match:]  # squadre che passano senza giocare
 
-                home, away = current_teams[i], current_teams[i + 1]
+            for i in range(0, len(playing), 2):
+                home, away = playing[i], playing[i + 1]
                 match = Match.objects.create(
                     home_team=home,
                     away_team=away,
@@ -215,6 +225,10 @@ class TournamentFactory:
                 winner = random.choice([home, away])
                 next_round_teams.append(winner)
                 self.logger.info(f"Match {home} vs {away} -> vincitore (casuale): {winner}")
+
+            for team in advancing:
+                self.logger.info(f"Squadra {team} passa turno per sorteggio (numero dispari).")
+                next_round_teams.append(team)
 
             current_teams = next_round_teams
             round_num += 1

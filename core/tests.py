@@ -7,6 +7,8 @@ from core.factories import tournament_factory  # se metti la factory in un file 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 import logging
+from core.utils.test_counter import increment_test_counter
+
 
 logger = logging.getLogger("tests")
 
@@ -14,6 +16,12 @@ logger = logging.getLogger("tests")
 class PlayerModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
+        global test_counter
+        test_counter = increment_test_counter()
+
+        logger.info(f"[TEST RUN #{test_counter}] → {cls.__name__}")
+        print(f"[TEST RUN #{test_counter}] → {cls.__name__}")
+
         logger.info("Inizio setUpTestData per PlayerModelTest")
         # Crea migrazioni se necessario
         if not connection.introspection.table_names():
