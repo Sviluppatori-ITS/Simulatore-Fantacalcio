@@ -69,7 +69,7 @@ class TournamentFactoryTest(TestCase):
         )
         logger.info("Creata Season: 2025")
 
-        cls.league_structure = TournamentStructure.objects.create(
+        cls.league_structure_a = TournamentStructure.objects.create(
             is_cup=False,
             use_groups=False,
             home_and_away=True,
@@ -77,7 +77,16 @@ class TournamentFactoryTest(TestCase):
             relegation_enabled=True,
             relegation_teams=3
         )
-        logger.info("Creata TournamentStructure per campionato")
+
+        cls.league_structure_b = TournamentStructure.objects.create(
+            is_cup=False,
+            use_groups=False,
+            home_and_away=True,
+            has_playoff=True,
+            relegation_enabled=False,
+            relegation_teams=0
+        )
+        logger.info("Creata TournamentStructure per i campionati")
 
         cls.cup_structure = TournamentStructure.objects.create(
             is_cup=True,
@@ -96,7 +105,7 @@ class TournamentFactoryTest(TestCase):
         # Test per la creazione di un torneo di lega (Serie A)
         logger.info("Test: creazione torneo di lega (Serie A)")
         factory = TournamentFactory(
-            structure=self.league_structure,
+            structure=self.league_structure_a,
             season=self.season,
             name="Serie A",
             teams=self.teams_serie_a,
@@ -129,7 +138,7 @@ class TournamentFactoryTest(TestCase):
         # Test per la creazione di un torneo di lega (Serie B)
         logger.info("Test: creazione torneo di lega (Serie B)")
         factory = TournamentFactory(
-            structure=self.league_structure,
+            structure=self.league_structure_b,
             season=self.season,
             name="Serie B",
             teams=self.teams_serie_b,
