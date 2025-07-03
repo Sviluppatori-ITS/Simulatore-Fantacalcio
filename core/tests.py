@@ -8,19 +8,21 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 import logging
 from core.utils.test_counter import increment_test_counter
+import sys
 
 
 logger = logging.getLogger("tests")
+
+global test_counter
+test_counter = increment_test_counter()
 
 
 class PlayerModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        global test_counter
-        test_counter = increment_test_counter()
 
         logger.info(f"[TEST RUN #{test_counter}] → {cls.__name__}")
-        print(f"[TEST RUN #{test_counter}] → {cls.__name__}")
+        print(f"\n[TEST RUN #{test_counter}] → {cls.__name__}", flush=True)
 
         logger.info("Inizio setUpTestData per PlayerModelTest")
         # Crea migrazioni se necessario
@@ -48,6 +50,10 @@ class TournamentFactoryTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
+
+        logger.info(f"[TEST RUN #{test_counter}] → {cls.__name__}")
+        print(f"\n[TEST RUN #{test_counter}] → {cls.__name__}", flush=True)
+
         logger.info("Inizio setUpTestData per TournamentFactoryTest")
         # Devi anche creare un User per il owner della League (se richiesto)
         user = User.objects.create(username='testuser')
@@ -87,6 +93,7 @@ class TournamentFactoryTest(TestCase):
         logger.info("Create 20 squadre per Serie B")
 
     def test_create_league_tournament(self):
+        # Test per la creazione di un torneo di lega (Serie A)
         logger.info("Test: creazione torneo di lega (Serie A)")
         factory = TournamentFactory(
             structure=self.league_structure,
@@ -113,6 +120,43 @@ class TournamentFactoryTest(TestCase):
         for round_obj in rounds:
             self.assertTrue(round_obj.matches.exists())
         logger.info("Ogni giornata ha almeno un match")
+
+        # Verifica che il numero di match sia corretto
+        expected_matches = (len(self.teams_serie_a) * (len(self.teams_serie_a) - 1) * 2) // 2
+        self.assertEqual(tournament.matches.count(), expected_matches)
+        logger.info(f"Numero di match creati: {tournament.matches.count()}")
+
+        # Test per la creazione di un torneo di lega (Serie B)
+        logger.info("Test: creazione torneo di lega (Serie B)")
+        factory = TournamentFactory(
+            structure=self.league_structure,
+            season=self.season,
+            name="Serie B",
+            teams=self.teams_serie_b,
+            description="Campionato di Serie B"
+        )
+        tournament = factory.create()
+        logger.info("Torneo Serie B creato")
+
+        self.assertEqual(tournament.name, "Serie B")
+        self.assertFalse(tournament.structure.is_cup)
+        self.assertEqual(tournament.season, self.season)
+        self.assertEqual(tournament.teams.count(), len(self.teams_serie_b))
+        logger.info("Verifica attributi torneo Serie B superata")
+
+        rounds = tournament.rounds.all()
+        self.assertGreater(len(rounds), 0)
+        logger.info(f"Numero di giornate create: {len(rounds)}")
+
+        # Verifica che ogni giornata abbia match
+        for round_obj in rounds:
+            self.assertTrue(round_obj.matches.exists())
+        logger.info("Ogni giornata ha almeno un match")
+
+        # Verifica che il numero di match sia corretto
+        expected_matches = (len(self.teams_serie_b) * (len(self.teams_serie_b) - 1) * 2) // 2
+        self.assertEqual(tournament.matches.count(), expected_matches)
+        logger.info(f"Numero di match creati: {tournament.matches.count()}")
 
     def test_create_cup_tournament(self):
         logger.info("Test: creazione torneo di coppa (Coppa Italia)")
