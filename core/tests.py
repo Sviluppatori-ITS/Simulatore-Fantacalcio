@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.core.management import call_command
 from django.db import connection
-from .models import Nationality, Person, Player, Tournament, Team, TournamentStructure, Season, League, Round, Match
+from .models import Nationality, Person, Player, Tournament, Team, TournamentStructure, Season, League, Round, Match, TournamentQualificationRule, TournamentRule
 from core.factories.tournament_factory import TournamentFactory
 from core.factories import tournament_factory  # se metti la factory in un file factories.py
 from django.contrib.auth import get_user_model
@@ -86,7 +86,34 @@ class TournamentFactoryTest(TestCase):
             relegation_enabled=False,
             relegation_teams=0
         )
-        logger.info("Creata TournamentStructure per i campionati")
+
+        # Crea tornei fittizi a cui applicare le regole di qualificazione
+        cls.serie_a = Tournament.objects.create(
+            name="Serie A Qual",
+            structure=cls.league_structure_a,
+            season=cls.season,
+        )
+        cls.serie_b = Tournament.objects.create(
+            name="Serie B Qual",
+            structure=cls.league_structure_b,
+            season=cls.season,
+        )
+
+        cls.league_a_qualification_rule = TournamentQualificationRule.objects.create(
+            from_tournament=cls.serie_b,
+            to_tournament=cls.serie_a,
+            min_rank=1,
+            max_rank=2,
+        )
+
+        cls.league_a_playoff_qualification_rule = TournamentQualificationRule.objects.create(
+            from_tournament=cls.serie_b,
+            to_tournament=cls.serie_a,
+            min_rank=3,
+            max_rank=6,
+        )
+
+        logger.info("Creata TournamentStructure per i campionati di Serie A e Serie B e regola di qualificazione diretta")
 
         cls.cup_structure = TournamentStructure.objects.create(
             is_cup=True,
@@ -109,7 +136,7 @@ class TournamentFactoryTest(TestCase):
             season=self.season,
             name="Serie A",
             teams=self.teams_serie_a,
-            description="Campionato di Serie A"
+            description="Campionato di Serie A",
         )
         tournament = factory.create()
         logger.info("Torneo Serie A creato")
@@ -142,7 +169,10 @@ class TournamentFactoryTest(TestCase):
             season=self.season,
             name="Serie B",
             teams=self.teams_serie_b,
-            description="Campionato di Serie B"
+            description="Campionato di Serie B",
+
+            tournament_direct_qualification_rule=self.league_a_qualification_rule,
+            tournament_playoff_qualification_rule=self.league_a_playoff_qualification_rule,
         )
         tournament = factory.create()
         logger.info("Torneo Serie B creato")
