@@ -21,8 +21,8 @@ class PlayerModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
 
-        logger.info(f"[TEST RUN #{test_counter}] → {cls.__name__}")
-        print(f"\n[TEST RUN #{test_counter}] → {cls.__name__}", flush=True)
+        logger.info(f"[TEST RUN #{test_counter}] -> {cls.__name__}")
+        print(f"\n[TEST RUN #{test_counter}] -> {cls.__name__}", flush=True)
 
         logger.info("Inizio setUpTestData per PlayerModelTest")
         # Crea migrazioni se necessario
@@ -51,8 +51,8 @@ class TournamentFactoryTest(TestCase):
     @classmethod
     def setUpTestData(cls):
 
-        logger.info(f"[TEST RUN #{test_counter}] → {cls.__name__}")
-        print(f"\n[TEST RUN #{test_counter}] → {cls.__name__}", flush=True)
+        logger.info(f"[TEST RUN #{test_counter}] -> {cls.__name__}")
+        print(f"\n[TEST RUN #{test_counter}] -> {cls.__name__}", flush=True)
 
         logger.info("Inizio setUpTestData per TournamentFactoryTest")
         # Devi anche creare un User per il owner della League (se richiesto)
