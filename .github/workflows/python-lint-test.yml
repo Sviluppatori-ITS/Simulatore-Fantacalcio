@@ -26,4 +26,6 @@ jobs:
 
     - name: Run tests with pytest
       run: |
-        pytest
+        pytest test.py -o log_cli_level=INFO
+
+
