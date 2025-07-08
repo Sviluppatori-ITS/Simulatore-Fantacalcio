@@ -352,7 +352,7 @@ class Player(models.Model):
         normalized = min(100, max(1, round(raw_score)))  # tra 1 e 100
         return normalized
 
-    def fanta_value(self):
+    def calculate_fanta_value(self):
         # Calcola il valore di mercato del giocatore basato su overall e ruolo
         base_value = self.overall * 1000
 
