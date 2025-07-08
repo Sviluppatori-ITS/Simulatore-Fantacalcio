@@ -167,34 +167,34 @@ class TournamentFactory:
 
             break  # creiamo solo il primo turno
 
-    def _generate_playoff(self, tournament):
-        playoff_teams_count = self.structure.playoff_teams
-        if playoff_teams_count < 2:
-            self.logger.warning("Numero insufficiente di squadre per playoff.")
-            return
+    # def _generate_playoff(self, tournament):
+    #     playoff_teams_count = self.structure.playoff_teams
+    #     if playoff_teams_count < 2:
+    #         self.logger.warning("Numero insufficiente di squadre per playoff.")
+    #         return
 
-        standings = get_tournament_standings(tournament)
-        teams_ranked = [team for team, data in standings][:playoff_teams_count]
+    #     standings = get_tournament_standings(tournament)
+    #     teams_ranked = [team for team, data in standings][:playoff_teams_count]
 
-        round_num = 100
-        round_label = self._round_label(len(teams_ranked))
-        round_obj = Round.objects.create(
-            tournament=tournament,
-            match_day=round_num,
-            label=f"Playoff - {round_label}",
-            knockout_stage=True
-        )
+    #     round_num = 100
+    #     round_label = self._round_label(len(teams_ranked))
+    #     round_obj = Round.objects.create(
+    #         tournament=tournament,
+    #         match_day=round_num,
+    #         label=f"Playoff - {round_label}",
+    #         knockout_stage=True
+    #     )
 
-        for i in range(0, len(teams_ranked), 2):
-            home, away = teams_ranked[i], teams_ranked[i + 1]
-            match = Match.objects.create(
-                home_team=home,
-                away_team=away,
-                tournament=tournament
-            )
-            round_obj.matches.add(match)
+    #     for i in range(0, len(teams_ranked), 2):
+    #         home, away = teams_ranked[i], teams_ranked[i + 1]
+    #         match = Match.objects.create(
+    #             home_team=home,
+    #             away_team=away,
+    #             tournament=tournament
+    #         )
+    #         round_obj.matches.add(match)
 
-        self.logger.info(f"Creato primo turno playoff con {len(teams_ranked)} squadre.")
+    #     self.logger.info(f"Creato primo turno playoff con {len(teams_ranked)} squadre.")
 
     def _round_label(self, n):
         labels = {
