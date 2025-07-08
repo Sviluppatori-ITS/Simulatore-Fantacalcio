@@ -5,6 +5,8 @@ on: [push, pull_request]
 jobs:
   lint-test:
     runs-on: ubuntu-latest
+    env:
+      DJANGO_SETTINGS_MODULE: fantacalcio_backend.settings
 
     steps:
     - uses: actions/checkout@v3
@@ -27,5 +29,3 @@ jobs:
     - name: Run tests with pytest
       run: |
         pytest core/tests.py -o log_cli_level=INFO
-
-
