@@ -1,0 +1,2 @@
+ - Login e Logout utente
+ - Implementare Frontend con React
