@@ -1,8 +1,10 @@
 {
 	"name": "Simulatore Fantacalcio",
 	"build": {
-		"dockerfile": "Dockerfile"
+		"dockerfile": "Dockerfile",
+		"context": "."
 	},
+	"workspaceFolder": "/workspaces/Simulatore-Fantacalcio",
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -10,18 +12,15 @@
 				"ms-python.vscode-pylance",
 				"ms-azuretools.vscode-docker",
 				"batisteo.vscode-django",
-				"esbenp.prettier-vscode", // formatter per JS/TS/JSON
-				"dbaeumer.vscode-eslint", // linter per JS/TS
-				"ms-azuretools.vscode-docker", // supporto per Docker
-				"mhutchie.git-graph", // visualizzazione grafica dei branch Git
+				"esbenp.prettier-vscode",
+				"dbaeumer.vscode-eslint",
+				"mhutchie.git-graph",
 				"ms-ceintl.vscode-language-pack-it",
 				"ms-python.autopep8",
 				"ms-python.flake8",
-				"esbenp.prettier-vscode",
 				"ms-python.pylint",
 				"inferrinizzard.prettier-sql-vscode",
 				"donjayamanne.python-extension-pack",
-				"batisteo.vscode-django",
 				"github.copilot",
 				"github.copilot-chat",
 				"ecmel.vscode-html-css",
@@ -39,15 +38,7 @@
 			]
 		}
 	},
-	"postCreateCommand": "pip install -r requirements.txt && pip install --upgrade pip setuptools wheel && python manage.py migrate",
-	"remoteUser": "vscode",
-	"features": {
-		"ghcr.io/devcontainers/features/python:1": {
-			"version": "3.13"
-		},
-		"ghcr.io/devcontainers/features/node:1": {
-			"version": "20"
-		}
-	},
+	"postCreateCommand": "pip install -r requirements.txt && python manage.py migrate",
+	"remoteUser": "root",
 	"updateContentCommand": "pip install --upgrade pip setuptools wheel && npm install -g npm@latest"
 }
