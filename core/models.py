@@ -28,9 +28,21 @@ class Person(models.Model):
         return f"{self.name} {self.surname} ({self.email})"
 
 
+class Continent(models.Model):
+    name = models.CharField(max_length=100, unique=True, help_text="Nome del continente")
+    code = models.CharField(max_length=2, unique=True, help_text="Codice ISO del continente", primary_key=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+
 class Nationality(models.Model):
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=3, unique=True)  # Codice ISO della nazione
+    continent = models.ForeignKey(Continent, on_delete=models.CASCADE, related_name='nationalities', null=True, blank=True, help_text="Continente di appartenenza")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -53,7 +65,7 @@ class Team(models.Model):
 
 class League(models.Model):
     name = models.CharField(max_length=100)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='leagues')
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='leagues', blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
