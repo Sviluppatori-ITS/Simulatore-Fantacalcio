@@ -1,11 +1,20 @@
 from django.contrib import admin
 from . import models
+from django.contrib.auth.models import User
+
+
+@admin.register(models.Continent)
+class ContinentAdmin(admin.ModelAdmin):
+    list_display = ("name", "code")
+    search_fields = ("name", "code")
+    ordering = ("code",)
 
 
 @admin.register(models.Nationality)
 class NationalityAdmin(admin.ModelAdmin):
-    list_display = ("name", "code")
-    search_fields = ("name", "code")
+    list_display = ("name", "code", "continent")
+    search_fields = ("name", "code", "continent__name")
+    ordering = ("code",)
 
 
 @admin.register(models.Person)

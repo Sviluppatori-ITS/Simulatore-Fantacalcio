@@ -1,124 +1,14 @@
-"""
-from core.models import Tournament, Match, Round, Team
-from django.db import transaction
-import random
-from itertools import combinations, permutations
-
-
-class TournamentFactory:
-
-    def __init__(self, structure, season, name, teams, description=""):
-        self.structure = structure
-        self.season = season
-        self.name = name
-        self.teams = list(teams)
-        self.description = description
-
-    @transaction.atomic
-    def create(self):
-        tournament = Tournament.objects.create(
-            name=self.name,
-            description=self.description,
-            structure=self.structure,
-            season=self.season,
-        )
-        tournament.teams.set(self.teams)
-
-        if self.structure.is_cup:
-            self._generate_knockout(tournament)
-        else:
-            self._generate_league(tournament)
-
-        return tournament
-
-    def _generate_league(self, tournament):
-        matchups = list(combinations(self.teams, 2))
-        if self.structure.home_and_away:
-            matchups += [(away, home) for home, away in matchups]
-
-        giornata_counter = 1
-        random.shuffle(matchups)
-
-        giornate = []
-        for i in range(0, len(matchups), len(self.teams) // 2):
-            giornate.append(matchups[i:i + len(self.teams) // 2])
-
-        for matches in giornate:
-            g = Round.objects.create(
-                tournament=tournament,
-                match_day=giornata_counter
-            )
-            for home, away in matches:
-                match = Match.objects.create(
-                    home_team=home,
-                    away_team=away,
-                    tournament=tournament
-                )
-                g.matches.add(match)
-            giornata_counter += 1
-
-    def _generate_knockout(self, tournament):
-        round_num = 1
-        current_teams = self.teams.copy()
-        random.shuffle(current_teams)
-
-        while len(current_teams) >= 2:
-            g = Round.objects.create(
-                tournament=tournament,
-                match_day=round_num,
-                label=self._round_label(len(current_teams)),
-                knockout_stage=True
-            )
-            next_round = []
-
-            for i in range(0, len(current_teams), 2):
-                if i + 1 >= len(current_teams):
-                    # dispari, passaggio automatico
-                    next_round.append(current_teams[i])
-                    continue
-                home, away = current_teams[i], current_teams[i + 1]
-                Match.objects.create(
-                    home_team=home,
-                    away_team=away,
-                    tournament=tournament
-                ).giornate.add(g)
-                # Placeholder: vincitore scelto a caso
-                next_round.append(random.choice([home, away]))
-
-            current_teams = next_round
-            round_num += 1
-
-    def _round_label(self, n):
-        if n == 2:
-            return "Finale"
-        elif n == 4:
-            return "Semifinali"
-        elif n == 8:
-            return "Quarti di finale"
-        elif n == 16:
-            return "Ottavi di finale"
-        elif n == 32:
-            return "Sedicesimi di finale"
-        elif n == 64:
-            return "Trentaduesimi di finale"
-        elif n == 128:
-            return "Sessantaquattresimi di finale"
-        return f"Turno a {n}"
-"""
-
-from core.models import Tournament, Match, Round, Team
+from core.models import Tournament, Match, Round, Team, TournamentStructure, Season, TournamentQualificationRule, TournamentRule
 from django.db import transaction
 import random
 from itertools import combinations
-import logging
-import inspect
-import os
-from core.logger import get_logger
 import math
+from core.logger import get_logger
+from core.services.standings import get_tournament_standings
 
 
 class TournamentFactory:
-    def __init__(self, structure, season, name, teams, description=""):
+    def __init__(self, structure, season, name, teams, description="", tournament_direct_qualification_rule=None, tournament_playoff_qualification_rule=None, other_tournament=None):
         self.logger = get_logger()
         if not structure:
             self.logger.error("Devi fornire una struttura torneo valida")
@@ -129,15 +19,36 @@ class TournamentFactory:
         if not name:
             self.logger.error("Devi fornire un nome torneo")
             raise ValueError("Devi fornire un nome torneo")
+        if Tournament.objects.filter(name=name, season=season).exists():
+            self.logger.error(f"Torneo '{name}' già esistente per la stagione {season.year}")
+            raise ValueError(f"Torneo '{name}' già esistente per la stagione {season.year}")
         if not teams or len(teams) < 2:
             self.logger.error("Devi fornire almeno 2 squadre")
             raise ValueError("Devi fornire almeno 2 squadre")
+        if not structure.is_cup and structure.has_playoff and tournament_playoff_qualification_rule is None:
+            self.logger.error("Devi fornire una regola di qualificazione per i playoff")
+            raise ValueError("Devi fornire una regola di qualificazione per i playoff")
+        if not structure.is_cup and structure.relegation_enabled and structure.relegation_teams < 1:
+            self.logger.error("Devi fornire almeno 1 squadra per la retrocessione")
+            raise ValueError("Devi fornire almeno 1 squadra per la retrocessione")
+        if not structure.is_cup and structure.relegation_enabled and not structure.relegation_enabled:
+            if structure.relegation_teams < (tournament_direct_qualification_rule.max_rank - tournament_direct_qualification_rule.min_rank + 1):
+                self.logger.error("Il numero di squadre per la retrocessione deve essere minore o uguale al numero di squadre promosse")
+                raise ValueError("Il numero di squadre per la retrocessione deve essere minore o uguale al numero di squadre promosse")
+        if not structure.is_cup and structure.relegation_enabled and structure.has_playoff:
+            if structure.relegation_teams < (tournament_direct_qualification_rule.max_rank - tournament_direct_qualification_rule.min_rank + 2):
+                self.logger.error("Il numero di squadre per la retrocessione deve essere minore o uguale al numero di squadre promosse")
+                raise ValueError("Il numero di squadre per la retrocessione deve essere minore o uguale al numero di squadre promosse")
 
         self.structure = structure
         self.season = season
         self.name = name
         self.teams = list(teams)
         self.description = description
+        self.tournament_direct_qualification_rule = tournament_direct_qualification_rule
+        self.tournament_playoff_qualification_rule = tournament_playoff_qualification_rule
+        self.other_tournament = other_tournament
+        self.logger.info(f"Inizializzato TournamentFactory per '{self.name}' ({self.structure}) con {len(self.teams)} squadre.")
 
     @transaction.atomic
     def create(self):
@@ -154,6 +65,35 @@ class TournamentFactory:
             self._generate_knockout(tournament)
         else:
             self._generate_league(tournament)
+
+        if self.structure.relegation_enabled:
+            if self.tournament_playoff_qualification_rule not in [None, ""]:
+                self.logger.info("Generazione regole di qualificazione per il torneo di promozione e retrocessione.")
+                tournament_direct_qualification_rule = TournamentQualificationRule.objects.create(
+                    from_tournament=tournament,
+                    to_tournament=self.other_tournament,
+                    min_rank=self.tournament_direct_qualification_rule.min_rank,
+                    max_rank=self.tournament_direct_qualification_rule.max_rank,
+                )
+                self.logger.info(f"Regola di qualificazione diretta creata: {tournament_direct_qualification_rule}")
+                if self.structure.has_playoff:
+                    play_off = self._generate_playoff(tournament)
+
+                    tournament_playoff_qualification_rule = TournamentQualificationRule.objects.create(
+                        from_tournament=tournament,
+                        to_tournament=play_off,
+                        min_rank=self.tournament_playoff_qualification_rule.min_rank,
+                        max_rank=self.tournament_playoff_qualification_rule.max_rank,
+                    )
+
+                    tournament_playoff_winner_qualification_rule = TournamentQualificationRule.objects.create(
+                        from_tournament=play_off,
+                        to_tournament=self.other_tournament,
+                        min_rank=1,
+                        max_rank=1,
+                    )
+
+                    self.logger.info(f"Regola di qualificazione playoff creata: {tournament_playoff_qualification_rule}")
 
         return tournament
 
@@ -183,8 +123,6 @@ class TournamentFactory:
                 round_obj.matches.add(match)
             giornata_counter += 1
 
-    import math
-
     def _generate_knockout(self, tournament):
         round_num = 1
         current_teams = self.teams.copy()
@@ -196,7 +134,6 @@ class TournamentFactory:
             matches_to_play = (num_teams - power)  # Numero di match da giocare in questo turno
             teams_in_match = matches_to_play * 2
 
-            # Se il numero è già una potenza di 2, fai tutte le partite
             if matches_to_play == 0:
                 teams_in_match = num_teams
 
@@ -208,10 +145,8 @@ class TournamentFactory:
             )
             self.logger.info(f"Creata fase '{round_obj.label}' (round {round_num}) con {num_teams} squadre.")
 
-            next_round_teams = []
-
             playing = current_teams[:teams_in_match]
-            advancing = current_teams[teams_in_match:]  # squadre che passano senza giocare
+            advancing = current_teams[teams_in_match:]  # squadre che passano turno senza giocare
 
             for i in range(0, len(playing), 2):
                 home, away = playing[i], playing[i + 1]
@@ -222,16 +157,44 @@ class TournamentFactory:
                 )
                 round_obj.matches.add(match)
 
-                winner = random.choice([home, away])
-                next_round_teams.append(winner)
-                self.logger.info(f"Match {home} vs {away} -> vincitore (casuale): {winner}")
+            # Squadre che passano turno senza giocare restano nella lista corrente
+            current_teams = advancing + playing  # Nota: senza decidere vincitori
 
-            for team in advancing:
-                self.logger.info(f"Squadra {team} passa turno per sorteggio (numero dispari).")
-                next_round_teams.append(team)
-
-            current_teams = next_round_teams
             round_num += 1
+
+            # Qui non si simulano risultati, quindi non possiamo "avanzare" realmente squadre
+            # La logica per avanzare squadre va fatta con i risultati delle partite
+
+            break  # creiamo solo il primo turno
+
+    # def _generate_playoff(self, tournament):
+    #     playoff_teams_count = self.structure.playoff_teams
+    #     if playoff_teams_count < 2:
+    #         self.logger.warning("Numero insufficiente di squadre per playoff.")
+    #         return
+
+    #     standings = get_tournament_standings(tournament)
+    #     teams_ranked = [team for team, data in standings][:playoff_teams_count]
+
+    #     round_num = 100
+    #     round_label = self._round_label(len(teams_ranked))
+    #     round_obj = Round.objects.create(
+    #         tournament=tournament,
+    #         match_day=round_num,
+    #         label=f"Playoff - {round_label}",
+    #         knockout_stage=True
+    #     )
+
+    #     for i in range(0, len(teams_ranked), 2):
+    #         home, away = teams_ranked[i], teams_ranked[i + 1]
+    #         match = Match.objects.create(
+    #             home_team=home,
+    #             away_team=away,
+    #             tournament=tournament
+    #         )
+    #         round_obj.matches.add(match)
+
+    #     self.logger.info(f"Creato primo turno playoff con {len(teams_ranked)} squadre.")
 
     def _round_label(self, n):
         labels = {
@@ -244,3 +207,58 @@ class TournamentFactory:
             128: "Sessantaquattresimi di finale"
         }
         return labels.get(n, f"Turno a {n}")
+
+    def _generate_playoff(self, tournament):
+        # Prendi tutte le regole di qualificazione per questo torneo
+        qualification_rules = tournament.qualification_rules.all()
+
+        if not qualification_rules.exists():
+            self.logger.warning("Nessuna regola di qualificazione trovata, impossibile generare playoff.")
+            return
+
+        # Ottieni la classifica aggiornata
+        standings = get_tournament_standings(tournament)
+
+        # Costruisci la lista delle squadre qualificate in base alle regole
+        qualified_teams = []
+        for rule in qualification_rules:
+            # Estrai le squadre che si trovano nel range indicato dalla regola
+            teams_in_range = [
+                team for pos, (team, _) in enumerate(standings, start=1)
+                if rule.min_rank <= pos <= rule.max_rank
+            ]
+            qualified_teams.extend(teams_in_range)
+
+        # Evita duplicati
+        qualified_teams = list(dict.fromkeys(qualified_teams))
+
+        if len(qualified_teams) < 2:
+            self.logger.warning("Numero insufficiente di squadre qualificate per playoff.")
+            return
+
+        round_num = 100  # Deve essere più alto rispetto ai turni della regular season
+        current_teams = qualified_teams
+        self.logger.info(f"Generazione playoff con {len(current_teams)} squadre")
+
+        # Per ora creiamo solo il primo turno playoff, i turni successivi si creeranno dopo con i risultati
+        round_label = self._round_label(len(current_teams))
+        round_obj = Round.objects.create(
+            tournament=tournament,
+            match_day=round_num,
+            label=f"Playoff - {round_label}",
+            knockout_stage=True
+        )
+
+        for i in range(0, len(current_teams), 2):
+            home, away = current_teams[i], current_teams[i + 1]
+            match = Match.objects.create(
+                home_team=home,
+                away_team=away,
+                tournament=tournament
+            )
+            round_obj.matches.add(match)
+
+        self.logger.info(f"Primo turno playoff creato con {len(current_teams) // 2} partite.")
+
+        # Non creiamo turni successivi qui: li gestirai dopo in base ai risultati
+        return round_obj

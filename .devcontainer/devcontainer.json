@@ -1,0 +1,44 @@
+{
+	"name": "Simulatore Fantacalcio",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"context": "."
+	},
+	"workspaceFolder": "/workspaces/Simulatore-Fantacalcio",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"ms-azuretools.vscode-docker",
+				"batisteo.vscode-django",
+				"esbenp.prettier-vscode",
+				"dbaeumer.vscode-eslint",
+				"mhutchie.git-graph",
+				"ms-ceintl.vscode-language-pack-it",
+				"ms-python.autopep8",
+				"ms-python.flake8",
+				"ms-python.pylint",
+				"inferrinizzard.prettier-sql-vscode",
+				"donjayamanne.python-extension-pack",
+				"github.copilot",
+				"github.copilot-chat",
+				"ecmel.vscode-html-css",
+				"george-alisson.html-preview-vscode",
+				"sidthesloth.html5-boilerplate",
+				"vscode-icons-team.vscode-icons",
+				"antfu.vite",
+				"burkeholland.simple-react-snippets",
+				"mechatroner.rainbow-csv",
+				"ms-python.debugpy",
+				"postman.postman-for-vscode",
+				"swellaby.node-pack",
+				"davidanson.vscode-markdownlint",
+				"zainchen.json"
+			]
+		}
+	},
+	"postCreateCommand": "pip install -r requirements.txt && python manage.py migrate",
+	"remoteUser": "root",
+	"updateContentCommand": "pip install --upgrade pip setuptools wheel && npm install -g npm@latest"
+}

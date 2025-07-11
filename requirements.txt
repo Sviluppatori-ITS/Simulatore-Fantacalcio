@@ -162,6 +162,10 @@ idna==3.10
     #   -r requirements.in
     #   requests
     #   trio
+iniconfig==2.1.0
+    # via
+    #   -r requirements.in
+    #   pytest
 ipython==9.3.0
     # via -r requirements.in
 ipython-pygments-lexers==1.1.1
@@ -236,6 +240,7 @@ packaging==25.0
     #   -r requirements.in
     #   build
     #   kombu
+    #   pytest
     #   twine
 parse==1.20.2
     # via
@@ -266,6 +271,10 @@ pipfile==0.0.2
     #   -r requirements.in
     #   perseus-core-library
     #   perseus-name-generator-library
+pluggy==1.6.0
+    # via
+    #   -r requirements.in
+    #   pytest
 polib==1.2.0
     # via
     #   -r requirements.in
@@ -302,6 +311,7 @@ pygments==2.19.1
     #   -r requirements.in
     #   ipython
     #   ipython-pygments-lexers
+    #   pytest
     #   readme-renderer
     #   rich
 pyjwt==2.9.0
@@ -327,6 +337,12 @@ pysocks==1.7.1
     # via
     #   -r requirements.in
     #   urllib3
+pytest==8.4.1
+    # via
+    #   -r requirements.in
+    #   pytest-django
+pytest-django==4.11.1
+    # via -r requirements.in
 python-dateutil==2.9.0.post0
     # via
     #   -r requirements.in

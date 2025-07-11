@@ -2,8 +2,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import viewsets, generics
 from rest_framework.serializers import ModelSerializer
 from rest_framework.permissions import AllowAny
-from .models import League, Team, User
-from .serializers import LeagueSerializer, TeamSerializer
+from .models import League, Team, User, Nationality, Player, Continent, Season, Trophy, TournamentStructure
+from .serializers import LeagueSerializer, TeamSerializer, NationalitySerializer, PlayerSerializer, ContinentSerializer, SeasonSerializer, TrophySerializer, TournamentStructureSerializer
 import logging
 
 
@@ -23,6 +23,12 @@ class TeamViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+
+class NationalityViewSet(viewsets.ModelViewSet):
+    queryset = Nationality.objects.all()
+    serializer_class = NationalitySerializer
+    permission_classes = [IsAuthenticated]
 
 
 class RegisterSerializer(ModelSerializer):
