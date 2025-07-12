@@ -25,7 +25,7 @@ class Person(models.Model):
         return None
 
     def __str__(self):
-        return f"{self.name} {self.surname} ({self.email})"
+        return f"{self.name} {self.surname}"
 
 
 class Continent(models.Model):
@@ -408,7 +408,7 @@ class Player(models.Model):
         return self.fanta_value()
 
     def __str__(self):
-        return f"{self.person.name} ({self.role}) - {self.main_nationality.name}"
+        return f"{self.person.name} ({self.main_role}) - {self.main_nationality.name}"
 
 
 class RosterSlot(models.Model):
