@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import League, Team, Nationality, Player
+from .models import League, Team, Nationality, Player, Continent
 
 
 class LeagueSerializer(serializers.ModelSerializer):
@@ -35,3 +35,9 @@ class PlayerSerializer(serializers.ModelSerializer):
         other_nationalities_data = validated_data.pop('other_nationalities', [])
         team_data = validated_data.pop('team')
         old_team_name_data = validated_data.pop('old_team_name', [])
+
+
+class ContinentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Continent
+        fields = '__all__'
