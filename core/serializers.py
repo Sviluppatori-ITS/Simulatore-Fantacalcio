@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import League, Team, Nationality, Player, Continent
+from .models import League, Team, Nationality, Player, Continent, PlayerStatistics, Season, Trophy, TournamentStructure
+from django.contrib.auth.models import User
 
 
 class LeagueSerializer(serializers.ModelSerializer):
@@ -41,3 +42,33 @@ class ContinentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Continent
         fields = '__all__'
+
+
+class PlayerStatisticsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PlayerStatistics
+        fields = '__all__'
+
+
+class SeasonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Season
+        fields = '__all__'
+
+
+class TrophySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Trophy
+        fields = '__all__'
+
+
+class TournamentStructureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TournamentStructure
+        fields = '__all__'
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email']
