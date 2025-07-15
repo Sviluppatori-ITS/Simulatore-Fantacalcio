@@ -56,10 +56,16 @@ class Nationality(models.Model):
 
 class Team(models.Model):
     name = models.CharField(max_length=100)
+    code = models.CharField(max_length=5)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='teams')
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if self.code:
+            self.code = self.code.upper()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         tournaments = ", ".join([t.name for t in self.tournaments.all()])
@@ -325,8 +331,6 @@ class TournamentRanking(models.Model):
 class Player(models.Model):
     person = models.OneToOneField(Person, on_delete=models.CASCADE, related_name='player_profile', help_text="Profilo del giocatore")
     main_role = models.CharField(max_length=20, choices=[('P', 'Portiere'), ('D', 'Difensore'), ('C', 'Centrocampista'), ('A', 'Attaccante')], null=True, blank=True, help_text="Ruolo principale del giocatore")  # Ruolo principale del giocatore
-    main_nationality = models.ForeignKey(Nationality, on_delete=models.CASCADE, related_name='players', help_text="Nazionalità principale del giocatore")  # Nazionalità principale
-    other_nationalities = models.ManyToManyField(Nationality, related_name='other_players', blank=True, help_text="Altre nazionalità del giocatore, se esistenti")  # Altre nazionalità
     overall = models.PositiveSmallIntegerField(default=50, help_text="Overall del giocatore, da 1 a 100")  # Overall del giocatore, da 1 a 100
     fanta_value = models.PositiveIntegerField(default=50000, help_text="Valore di fanta-mercato del giocatore")  # Valore di fanta-mercato del giocatore
     value = models.PositiveIntegerField(default=0, help_text="Valore di mercato del giocatore")  # Valore di mercato del giocatore, calcolato in base all'overall e al ruolo
@@ -411,7 +415,7 @@ class Player(models.Model):
         return self.fanta_value()
 
     def __str__(self):
-        return f"{self.person.name} ({self.main_role}) - {self.main_nationality.name}"
+        return f"{self.person.name} ({self.main_role}) - {self.person.main_nationality.name}"
 
 
 class RosterSlot(models.Model):

@@ -85,7 +85,7 @@ class SeasonTeamAdmin(admin.ModelAdmin):
 @admin.register(models.Player)
 class PlayerAdmin(admin.ModelAdmin):
     list_display = ("person", "main_role", "overall", "fanta_value")
-    list_filter = ("main_role", "main_nationality")
+    list_filter = ("main_role", "person__main_nationality")
     search_fields = ("person__name", "person__surname")
 
 

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import League, Team, Nationality, Player, Continent, PlayerStatistics, Season, Trophy, TournamentStructure
+from .models import League, Team, Nationality, Player, Continent, PlayerStatistics, Season, Trophy, TournamentStructure, Person
 from django.contrib.auth.models import User
 
 
@@ -15,6 +15,12 @@ class TeamSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class TeamNestedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Team
+        fields = ['id', 'name', 'code']
+
+
 class ContinentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Continent
@@ -28,43 +34,99 @@ class ContinentNestedSerializer(serializers.ModelSerializer):
 
 
 class NationalitySerializer(serializers.ModelSerializer):
-    # Se passi un id, userà quello. Se passi un oggetto, lo crea se non esistente.
-    continent = serializers.PrimaryKeyRelatedField(
-        queryset=Continent.objects.all(),
-        required=False,
-        allow_null=True
-    )
-    # In lettura, mostriamo i dettagli
     continent_info = ContinentNestedSerializer(source='continent', read_only=True)
+    continent = serializers.SerializerMethodField()
 
     class Meta:
         model = Nationality
         fields = ['id', 'name', 'code', 'continent', 'continent_info']
 
+    def get_continent(self, obj):
+        return obj.continent.id if obj.continent else None
+
+    def to_internal_value(self, data):
+        if isinstance(data, dict):
+            continent_data = data.pop('continent', None)
+            if continent_data and isinstance(continent_data, dict):
+                continent, _ = Continent.objects.get_or_create(**continent_data)
+                data['continent'] = continent.id
+            else:
+                data['continent'] = continent_data
+        return super().to_internal_value(data)
+
+
+class PersonSerializer(serializers.ModelSerializer):
+    main_nationality = serializers.PrimaryKeyRelatedField(
+        queryset=Nationality.objects.all(),
+        required=False,
+        allow_null=True
+    )
+    other_nationalities = serializers.PrimaryKeyRelatedField(
+        queryset=Nationality.objects.all(),
+        many=True,
+        required=False
+    )
+
+    # Per lettura dettagliata
+    main_nationality_info = NationalitySerializer(source='main_nationality', read_only=True)
+    other_nationalities_info = NationalitySerializer(source='other_nationalities', many=True, read_only=True)
+
+    class Meta:
+        model = Person
+        fields = [
+            'id', 'name', 'birth_date',
+            'main_nationality', 'other_nationalities',
+            'main_nationality_info', 'other_nationalities_info'
+        ]
+
     def create(self, validated_data):
-        continent = validated_data.pop('continent', None)
-        # Se continent è un dict, allora è stato passato un oggetto
-        if isinstance(continent, dict):
-            continent = Continent.objects.create(**continent)
-        nationality = Nationality.objects.create(continent=continent, **validated_data)
-        return nationality
+        other_nationalities_data = validated_data.pop('other_nationalities', [])
+        person = Person.objects.create(**validated_data)
+        person.other_nationalities.set(other_nationalities_data)
+        return person
+
+    def update(self, instance, validated_data):
+        other_nationalities_data = validated_data.pop('other_nationalities', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if other_nationalities_data is not None:
+            instance.other_nationalities.set(other_nationalities_data)
+        return instance
 
 
 class PlayerSerializer(serializers.ModelSerializer):
-    main_nationality = NationalitySerializer()
-    other_nationalities = NationalitySerializer(many=True)
+    person = PersonSerializer()
     team = TeamSerializer()
-    old_team_name = TeamSerializer(many=True, read_only=True)
+    old_team_name = TeamNestedSerializer(many=True, read_only=True)
 
     class Meta:
         model = Player
         fields = '__all__'
 
     def create(self, validated_data):
-        main_nationality_data = validated_data.pop('main_nationality')
-        other_nationalities_data = validated_data.pop('other_nationalities', [])
+        person_data = validated_data.pop('person')
         team_data = validated_data.pop('team')
-        old_team_name_data = validated_data.pop('old_team_name', [])
+
+        # Gestione PERSON
+        person_serializer = PersonSerializer(data=person_data)
+        person_serializer.is_valid(raise_exception=True)
+        person = person_serializer.save()
+
+        # Gestione TEAM
+        if isinstance(team_data, dict):
+            team, _ = Team.objects.get_or_create(**team_data)
+        else:
+            team = Team.objects.get(id=team_data)
+
+        # Crea PLAYER
+        player = Player.objects.create(
+            person=person,
+            team=team,
+            **validated_data
+        )
+
+        return player
 
 
 class PlayerStatisticsSerializer(serializers.ModelSerializer):
