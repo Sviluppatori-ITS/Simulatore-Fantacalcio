@@ -56,13 +56,13 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: coverage-report
-        path: coverage
+        path: frontend/coverage
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
       with:
         name: test-results
-        path: test-results/results.xml
+        path: frontend/test-results/results.xml
 
     - name: Build project
       run: npm run build
