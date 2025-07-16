@@ -5,6 +5,11 @@ export default defineConfig({
         globals: true,
         environment: 'jsdom',
         setupFiles: './src/setupTests.ts',
-        reporters: ['default', ['junit', { outputFile: 'frontend/test-results/results.xml' }]],
+        reporters: ['default', ['junit', { outputFile: 'test-results/results.xml' }]],
+        coverage: {
+            provider: 'v8',
+            reporter: ['text', 'lcov', 'json', 'html'],
+            reportsDirectory: 'coverage',
+        },
     },
 });
