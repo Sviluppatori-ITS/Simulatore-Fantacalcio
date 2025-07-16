@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.core.management import call_command
 from django.db import connection
-from .models import Nationality, Person, Player, Tournament, Team, TournamentStructure, Season, League, Round, Match, TournamentQualificationRule, TournamentRule, SeasonTeam, TournamentRanking
+from .models import Nationality, Person, Player, Tournament, Team, TournamentStructure, Season, League, Round, Match, TournamentQualificationRule, TournamentRule, SeasonTeam, TournamentRanking, Continent
 from core.factories.tournament_factory import TournamentFactory
 from core.factories import tournament_factory  # se metti la factory in un file factories.py
 from django.contrib.auth import get_user_model
@@ -33,17 +33,26 @@ class PlayerModelTest(TestCase):
         logger.info("Eseguo migrate")
         call_command('migrate', verbosity=0)
 
-        cls.nationality = Nationality.objects.create(name="Italia", code="ITA")
-        logger.info("Creata Nationality: Italia")
+        cls.continent = Continent.objects.create(name="Europa", code="EU")
+        logger.info(f"Creato Continent: {cls.continent.name}")
+        cls.nationality = Nationality.objects.create(name="Italia", code="ITA", continent=cls.continent)
+        logger.info(f"Creata Nationality: {cls.nationality.name}")
         cls.person = Person.objects.create(name="Mario", surname="Rossi", birth_date="1995-05-01", main_nationality=cls.nationality)
-        logger.info("Creata Person: Mario Rossi")
-        cls.player = Player.objects.create(person=cls.person, main_nationality=cls.nationality)
-        logger.info("Creato Player per Mario Rossi")
+        logger.info(f"Creata Person: {cls.person.name} {cls.person.surname}")
+        cls.player = Player.objects.create(person=cls.person, main_role="P")
+        cls.player.full_clean()
+        cls.player.save()
+        logger.info(f"Creato Player per {cls.person.name} {cls.person.surname} con ruolo {cls.player.main_role}")
 
     def test_default_overall(self):
         logger.info("Test: controllo valore overall di default per Player")
         self.assertEqual(self.player.overall, 50)
         logger.info("Test superato: overall di default è 50")
+
+    def test_player_role(self):
+        logger.info("Test: controllo ruolo di default per Player")
+        self.assertEqual(self.player.main_role, "P")
+        logger.info(f"Test superato: ruolo di default è '{self.player.main_role}' - '{self.player.get_main_role_display()}'")
 
 
 class SeasonTeamModelTest(TestCase):
