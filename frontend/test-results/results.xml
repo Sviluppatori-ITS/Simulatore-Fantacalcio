@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="0.100025456">
+    <testsuite name="src/__tests__/Players.test.tsx" timestamp="2025-07-16T14:49:54.678Z" hostname="kali-02" tests="1" failures="0" errors="0" skipped="0" time="0.100025456">
+        <testcase classname="src/__tests__/Players.test.tsx" name="Players component &gt; renders heading" time="0.097925606">
+            <system-err>
+An update to Players inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() =&gt; {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you&apos;re testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+            </system-err>
+        </testcase>
+    </testsuite>
+</testsuites>
