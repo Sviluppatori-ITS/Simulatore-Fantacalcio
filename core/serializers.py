@@ -42,14 +42,10 @@ class ContinentNestedSerializer(serializers.ModelSerializer):
 
 class NationalitySerializer(serializers.ModelSerializer):
     continent_info = ContinentNestedSerializer(source='continent', read_only=True)
-    continent = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Nationality
         fields = ['id', 'name', 'code', 'continent', 'continent_info']
-
-    def get_continent(self, obj):
-        return obj.continent.id if obj.continent else None
 
     def to_internal_value(self, data):
         if isinstance(data, dict):
@@ -81,7 +77,7 @@ class PersonSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Person
         fields = [
-            'id', 'name', 'birth_date',
+            'id', 'name', 'surname', 'birth_date',
             'main_nationality', 'other_nationalities',
             'main_nationality_info', 'other_nationalities_info'
         ]
@@ -104,7 +100,6 @@ class PersonSerializer(serializers.ModelSerializer):
 
 class PlayerSerializer(serializers.ModelSerializer):
     person = PersonSerializer()
-    team = TeamSerializer()
     old_team_name = TeamNestedSerializer(many=True, read_only=True)
 
     class Meta:
@@ -113,23 +108,15 @@ class PlayerSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         person_data = validated_data.pop('person')
-        team_data = validated_data.pop('team')
 
         # Gestione PERSON
         person_serializer = PersonSerializer(data=person_data)
         person_serializer.is_valid(raise_exception=True)
         person = person_serializer.save()
 
-        # Gestione TEAM
-        if isinstance(team_data, dict):
-            team, _ = models.Team.objects.get_or_create(**team_data)
-        else:
-            team = models.Team.objects.get(id=team_data)
-
         # Crea PLAYER
         player = models.Player.objects.create(
             person=person,
-            team=team,
             **validated_data
         )
 

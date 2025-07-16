@@ -2,6 +2,20 @@
 
 ## Sito per Simulare un campionato di Fantacalcio
 
+### CI Status
+
+- React CI:
+  ![React CI](https://github.com/Sviluppatori-ITS/Simulatore-Fantacalcio/actions/workflows/react-ci.yml/badge.svg)
+
+- Django CI:
+  ![Django CI](https://github.com/Sviluppatori-ITS/Simulatore-Fantacalcio/actions/workflows/django.yml/badge.svg)
+
+- Python Lint & Test:
+  ![Python Lint & Test](https://github.com/Sviluppatori-ITS/Simulatore-Fantacalcio/actions/workflows/python-lint-test.yml/badge.svg)
+
+- CodeQL Security Scan:
+  ![CodeQL](https://github.com/Sviluppatori-ITS/Simulatore-Fantacalcio/actions/workflows/codeql.yml/badge.svg)
+
 ---
 
 ## INSTALLAZIONE
