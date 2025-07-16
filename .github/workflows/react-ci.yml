@@ -11,15 +11,15 @@ jobs:
         working-directory: frontend
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v3
       with:
         node-version: 18
 
     - name: Cache node modules
-      uses: actions/cache@v4
+      uses: actions/cache@v3
       with:
         path: ~/.npm
         key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
@@ -40,6 +40,9 @@ jobs:
     - name: Run lint
       run: npm run lint
 
+    - name: Create test results folder
+      run: mkdir -p test-results
+
     - name: Run tests
       run: npm test
 
@@ -47,13 +50,14 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: coverage-report
-        path: frontend/coverage
+        path: coverage
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
       with:
         name: test-results
-        path: frontend/test-results/results.xml
+        path: test-results/results.xml
 
     - name: Build project
       run: npm run build
+
