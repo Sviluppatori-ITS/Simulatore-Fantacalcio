@@ -42,11 +42,15 @@ class PlayerFilter(django_filters.FilterSet):
     def filter_nationality(self, queryset, name, value):
         return queryset.filter(
             Q(person__main_nationality__name__icontains=value) |
-            Q(person__other_nationalities__name__icontains=value)
+            Q(person__main_nationality__code__icontains=value) |
+            Q(person__other_nationalities__name__icontains=value) |
+            Q(person__other_nationalities__code__icontains=value)
         ).distinct()
 
     def filter_continent(self, queryset, name, value):
         return queryset.filter(
             Q(person__main_nationality__continent__name__icontains=value) |
-            Q(person__other_nationalities__continent__name__icontains=value)
+            Q(person__other_nationalities__continent__name__icontains=value) |
+            Q(person__main_nationality__continent__code__icontains=value) |
+            Q(person__other_nationalities__continent__code__icontains=value)
         ).distinct()
