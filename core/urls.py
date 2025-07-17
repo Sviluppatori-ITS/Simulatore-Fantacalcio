@@ -1,7 +1,9 @@
-from django.urls import path, include
-from .views import RegisterView
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from .views import LeagueViewSet, TeamViewSet, NationalityViewSet, ContinentViewSet, TrophyViewSet, TournamentStructureViewSet, SeasonViewSet, PlayerViewSet
+
+from .views import (ContinentViewSet, LeagueViewSet, NationalityViewSet,
+                    PlayerViewSet, RegisterView, SeasonViewSet, TeamViewSet,
+                    TournamentStructureViewSet, TrophyViewSet)
 
 router = DefaultRouter()
 router.register(r'leagues', LeagueViewSet)

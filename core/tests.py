@@ -1,15 +1,21 @@
-from django.test import TestCase
-from django.core.management import call_command
-from django.db import connection
-from .models import Nationality, Person, Player, Tournament, Team, TournamentStructure, Season, League, Round, Match, TournamentQualificationRule, TournamentRule, SeasonTeam, TournamentRanking, Continent
-from core.factories.tournament_factory import TournamentFactory
-from core.factories import tournament_factory  # se metti la factory in un file factories.py
-from django.contrib.auth import get_user_model
-from django.contrib.auth.models import User
 import logging
-from core.utils.test_counter import increment_test_counter
 import sys
 
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
+from django.core.management import call_command
+from django.db import connection
+from django.test import TestCase
+
+from core.factories import \
+    tournament_factory  # se metti la factory in un file factories.py
+from core.factories.tournament_factory import TournamentFactory
+from core.utils.test_counter import increment_test_counter
+
+from .models import (Continent, League, Match, Nationality, Person, Player,
+                     Round, Season, SeasonTeam, Team, Tournament,
+                     TournamentQualificationRule, TournamentRanking,
+                     TournamentRule, TournamentStructure)
 
 logger = logging.getLogger("tests")
 

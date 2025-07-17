@@ -1,7 +1,8 @@
+from django.contrib.auth.models import User
 from rest_framework import serializers
+
 # from .models import League, Team, Nationality, Player, Continent, PlayerStatistics, Season, Trophy, TournamentStructure, Person
 from . import models
-from django.contrib.auth.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):

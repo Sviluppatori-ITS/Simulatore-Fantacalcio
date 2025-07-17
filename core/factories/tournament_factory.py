@@ -1,9 +1,13 @@
-from core.models import Tournament, Match, Round, Team, TournamentStructure, Season, TournamentQualificationRule, TournamentRule
-from django.db import transaction
+import math
 import random
 from itertools import combinations
-import math
+
+from django.db import transaction
+
 from core.logger import get_logger
+from core.models import (Match, Round, Season, Team, Tournament,
+                         TournamentQualificationRule, TournamentRule,
+                         TournamentStructure)
 from core.services.standings import get_tournament_standings
 
 

@@ -1,6 +1,7 @@
 from django.contrib import admin
-from . import models
 from django.contrib.auth.models import User
+
+from . import models
 
 
 @admin.register(models.Continent)

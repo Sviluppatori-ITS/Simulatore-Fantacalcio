@@ -177,6 +177,8 @@ ipython-pygments-lexers==1.1.1
     # via
     #   -r requirements.in
     #   ipython
+isort==6.0.1
+    # via -r requirements.in
 jaraco-classes==3.4.0
     # via
     #   -r requirements.in

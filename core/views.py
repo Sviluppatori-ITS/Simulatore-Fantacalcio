@@ -1,11 +1,18 @@
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework import viewsets, generics
-from rest_framework.serializers import ModelSerializer
-from .models import League, Team, User, Nationality, Player, Continent, Season, Trophy, TournamentStructure
-from .serializers import LeagueSerializer, TeamSerializer, NationalitySerializer, PlayerSerializer, ContinentSerializer, SeasonSerializer, TrophySerializer, TournamentStructureSerializer, UserSerializer
-from core.filters.player_filter import PlayerFilter
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import generics, viewsets
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.serializers import ModelSerializer
+
+from core.filters.player_filter import PlayerFilter
 from core.logger import get_logger
+
+from .models import (Continent, League, Nationality, Player, Season, Team,
+                     TournamentStructure, Trophy, User)
+from .serializers import (ContinentSerializer, LeagueSerializer,
+                          NationalitySerializer, PlayerSerializer,
+                          SeasonSerializer, TeamSerializer,
+                          TournamentStructureSerializer, TrophySerializer,
+                          UserSerializer)
 
 logger = get_logger()
 
