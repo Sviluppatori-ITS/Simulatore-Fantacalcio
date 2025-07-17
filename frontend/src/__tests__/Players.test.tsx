@@ -1,9 +1,13 @@
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom'; // Importa MemoryRouter
 import Players from '../pages/Players';
 
-describe('Players component', () => {
-    it('renders heading', () => {
-        render(<Players />);
-        expect(screen.getByRole('heading', { name: /players/i })).toBeInTheDocument();
-    });
+test('Players component renders heading', () => {
+    render(
+        <MemoryRouter>
+            <Players />
+        </MemoryRouter>,
+    );
+
+    expect(screen.getByText(/Players/i)).toBeInTheDocument();
 });

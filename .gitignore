@@ -57,3 +57,7 @@ yarn-error.log*
 # Test coverage
 */coverage/*
 !*/coverage/.gitkeep
+
+# Test results
+*/test-results/*
+!/test-results/.gitkeep
