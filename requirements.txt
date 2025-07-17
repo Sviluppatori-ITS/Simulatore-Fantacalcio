@@ -102,6 +102,7 @@ django==5.2.3
     #   django-cors-headers
     #   django-crispy-forms
     #   django-extensions
+    #   django-filter
     #   django-rosetta
     #   djangorestframework
     #   djangorestframework-simplejwt
@@ -116,6 +117,8 @@ django-crispy-forms==2.4
     #   -r requirements.in
     #   crispy-bootstrap5
 django-extensions==4.1
+    # via -r requirements.in
+django-filter==25.1
     # via -r requirements.in
 django-i18n==1.0.5
     # via -r requirements.in

@@ -8,10 +8,22 @@ export interface Player {
         main_nationality_info?: {
             id: number;
             name: string;
+            code: string;
+            continent: {
+                id: number;
+                name: string;
+                code: string;
+            };
         };
         other_nationalities_info?: {
             id: number;
             name: string;
+            code: string;
+            continent: {
+                id: number;
+                name: string;
+                code: string;
+            };
         }[];
     };
     main_role: string | null;

@@ -26,6 +26,7 @@ django-allauth==65.9.0
 django-cors-headers==4.7.0
 django-crispy-forms==2.4
 django-extensions==4.1
+django-filter==25.1
 django-i18n==1.0.5
 django-i18nurls==0.7
 django-ratelimit==4.1.0

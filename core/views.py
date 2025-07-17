@@ -1,10 +1,13 @@
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import viewsets, generics
 from rest_framework.serializers import ModelSerializer
-from rest_framework.permissions import AllowAny
 from .models import League, Team, User, Nationality, Player, Continent, Season, Trophy, TournamentStructure
 from .serializers import LeagueSerializer, TeamSerializer, NationalitySerializer, PlayerSerializer, ContinentSerializer, SeasonSerializer, TrophySerializer, TournamentStructureSerializer, UserSerializer
-import logging
+from core.filters.player_filter import PlayerFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from core.logger import get_logger
+
+logger = get_logger()
 
 permission = AllowAny  # IsAuthenticated or AllowAny based on your needs
 
@@ -42,7 +45,9 @@ class NationalityViewSet(viewsets.ModelViewSet):
 class PlayerViewSet(viewsets.ModelViewSet):
     queryset = Player.objects.all()
     serializer_class = PlayerSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [permission]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = PlayerFilter
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
