@@ -1,12 +1,13 @@
 import { Routes, Route, Link } from 'react-router-dom';
-import Players from './pages/Players'; // importa il componente vero
+import Players from './pages/Players';
+import Tournaments from './pages/Tournaments';
+import Login from './components/Login';
+import Logout from './components/Logout';
+
+import ProtectedRoute from './components/ProtectedRoute';
 
 function Home() {
     return <h2>Home</h2>;
-}
-
-function Tournaments() {
-    return <h2>Tournaments</h2>;
 }
 
 function App() {
@@ -18,9 +19,15 @@ function App() {
             </nav>
 
             <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/tournaments" element={<Tournaments />} />
-                <Route path="/players" element={<Players />} /> {/* usa il componente importato */}
+                <Route path="/login" element={<Login />} />
+
+                {/* Proteggi questa rotta */}
+                <Route element={<ProtectedRoute />}>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/tournaments" element={<Tournaments />} />
+                    <Route path="/players" element={<Players />} />
+                    <Route path="/logout" element={<Logout />} />
+                </Route>
             </Routes>
         </div>
     );

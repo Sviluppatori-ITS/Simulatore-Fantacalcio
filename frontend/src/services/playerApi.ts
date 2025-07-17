@@ -1,3 +1,5 @@
+import { apiFetch } from './api';
+
 export interface Player {
     id: number;
     person: {
@@ -32,8 +34,24 @@ export interface Player {
     value: number;
 }
 
-export async function fetchPlayers(): Promise<Player[]> {
-    const res = await fetch('/api/player/');
+export interface PlayerFilters {
+    [key: string]: string | number | undefined;
+}
+
+export async function fetchPlayers(filters?: PlayerFilters) {
+    let url = '/api/player/';
+    if (filters) {
+        const params = new URLSearchParams();
+        for (const key in filters) {
+            const val = filters[key];
+            if (val !== undefined && val !== null && val !== '') {
+                params.append(key, String(val));
+            }
+        }
+        url += `?${params.toString()}`;
+    }
+
+    const res = await apiFetch(url);
     if (!res.ok) throw new Error('Failed to fetch players');
     return res.json();
 }

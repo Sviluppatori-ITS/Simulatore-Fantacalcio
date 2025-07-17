@@ -9,7 +9,7 @@ from core.logger import get_logger
 
 logger = get_logger()
 
-permission = AllowAny  # IsAuthenticated or AllowAny based on your needs
+permission = IsAuthenticated  # IsAuthenticated or AllowAny based on your needs
 
 
 class LeagueViewSet(viewsets.ModelViewSet):
