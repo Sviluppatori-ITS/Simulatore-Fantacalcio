@@ -150,7 +150,7 @@ class TournamentStructureSerializer(serializers.ModelSerializer):
 
 class FormationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.Formations
+        model = models.Formation
         fields = '__all__'
 
 

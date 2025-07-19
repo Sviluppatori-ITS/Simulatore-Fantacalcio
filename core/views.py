@@ -6,8 +6,9 @@ from rest_framework.serializers import ModelSerializer
 from core.filters.player_filter import PlayerFilter
 from core.logger import get_logger
 
+from django.contrib.auth.models import User
 from .models import (Continent, League, Nationality, Player, Season, Team,
-                     TournamentStructure, Trophy, User)
+                     TournamentStructure, Trophy)
 from .serializers import (ContinentSerializer, LeagueSerializer,
                           NationalitySerializer, PlayerSerializer,
                           SeasonSerializer, TeamSerializer,

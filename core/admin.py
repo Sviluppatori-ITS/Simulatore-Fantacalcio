@@ -159,7 +159,7 @@ class DefaultFormationAdmin(admin.ModelAdmin):
     search_fields = ("name",)
 
 
-@admin.register(models.Formations)
+@admin.register(models.Formation)
 class FormationsAdmin(admin.ModelAdmin):
     list_display = ("team", "tournament", "tactic_name", "is_default_formation")
     list_filter = ("tournament", "is_default_formation")
