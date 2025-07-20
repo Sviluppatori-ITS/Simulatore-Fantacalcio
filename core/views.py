@@ -13,6 +13,7 @@ from .serializers import (ContinentSerializer, LeagueSerializer,
                           NationalitySerializer, PlayerSerializer,
                           SeasonSerializer, TeamSerializer,
                           TournamentStructureSerializer, TrophySerializer,
+                          SeasonTeamSerializer,
                           UserSerializer)
 
 logger = get_logger()
@@ -37,6 +38,12 @@ class TeamViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+
+class SeasonTeamViewSet(viewsets.ModelViewSet):
+    queryset = SeasonTeamSerializer.object.all()
+    serializer_class = SeasonTeamSerializer
+    permission_classes = [permission]
 
 
 class ContinentViewSet(viewsets.ModelViewSet):

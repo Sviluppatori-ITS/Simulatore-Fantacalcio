@@ -29,6 +29,12 @@ class TeamNestedSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'code']
 
 
+class SeasonTeamSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.SeasonTeam
+        fields = '__all__'
+
+
 class ContinentSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Continent
