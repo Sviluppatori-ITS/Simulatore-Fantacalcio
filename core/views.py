@@ -8,7 +8,7 @@ from core.logger import get_logger
 
 from django.contrib.auth.models import User
 from .models import (Continent, League, Nationality, Player, Season, Team,
-                     TournamentStructure, Trophy)
+                     TournamentStructure, Trophy, SeasonTeam)
 from .serializers import (ContinentSerializer, LeagueSerializer,
                           NationalitySerializer, PlayerSerializer,
                           SeasonSerializer, TeamSerializer,
@@ -41,7 +41,7 @@ class TeamViewSet(viewsets.ModelViewSet):
 
 
 class SeasonTeamViewSet(viewsets.ModelViewSet):
-    queryset = SeasonTeamSerializer.object.all()
+    queryset = SeasonTeam.objects.all()
     serializer_class = SeasonTeamSerializer
     permission_classes = [permission]
 
