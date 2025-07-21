@@ -5,6 +5,7 @@ from rest_framework.serializers import ModelSerializer
 
 from core.filters.player_filter import PlayerFilter
 from core.logger import get_logger
+from core.permissions import IsSuperUser
 
 from django.contrib.auth.models import User
 from .models import (Continent, League, Nationality, Player, Season, Team,
@@ -19,7 +20,7 @@ from .serializers import (ContinentSerializer, LeagueSerializer,
 logger = get_logger()
 
 # IsAuthenticated or AllowAny based on your needs
-permission = AllowAny
+permission = IsSuperUser
 
 
 class LeagueViewSet(viewsets.ModelViewSet):
