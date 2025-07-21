@@ -18,9 +18,22 @@ class LeagueSerializer(serializers.ModelSerializer):
 
 
 class TeamSerializer(serializers.ModelSerializer):
+    owner = UserSerializer()
+
     class Meta:
         model = models.Team
         fields = '__all__'
+
+    def create(self, validate_data):
+        owner_data = validate_data.pop('owner')
+        owner = User.objects.get_or_create(**owner_data)[0]
+
+        team = models.Team.objects.create(
+            owner=owner,
+            **validate_data
+        )
+
+        return team
 
 
 class TeamNestedSerializer(serializers.ModelSerializer):

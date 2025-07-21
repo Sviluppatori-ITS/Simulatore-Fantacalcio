@@ -39,7 +39,7 @@ export default function Tournaments() {
     return (
         <div>
             <h2>Tournaments</h2>
-            <ol>
+            <ol type="I">
                 {tournaments.map(t => (
                     <li key={t.id}>
                         <strong>{t.name}</strong> <br />
@@ -116,7 +116,20 @@ export default function Tournaments() {
                                     {t.teams.map(team => (
                                         <li key={team.id}>
                                             {team.name} ({team.code}){' '}
-                                            {team.owner ? `– Proprietario: ${team.owner}` : ''}
+                                            <details>
+                                                <summary>
+                                                    <strong>Owner</strong>
+                                                </summary>
+                                                {team.owner ? (
+                                                    <ul>
+                                                        <li>ID: {team.owner.id}</li>
+                                                        <li>Username: {team.owner.username}</li>
+                                                        <li>Email: {team.owner.email}</li>
+                                                    </ul>
+                                                ) : (
+                                                    <p>Nessun owner</p>
+                                                )}
+                                            </details>
                                         </li>
                                     ))}
                                 </ul>
