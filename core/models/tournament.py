@@ -1,7 +1,7 @@
 from django.db import models
 from .tournament_structure import TournamentStructure
 from .season import Season
-from .team import Team
+from .season_team import SeasonTeam
 from .trophy import Trophy
 
 
@@ -10,7 +10,7 @@ class Tournament(models.Model):
     description = models.TextField(blank=True)
     structure = models.ForeignKey(TournamentStructure, on_delete=models.PROTECT)
     season = models.ForeignKey(Season, on_delete=models.CASCADE, related_name='tournament')
-    teams = models.ManyToManyField(Team, related_name='tournaments', blank=True)  # Squadre partecipanti
+    teams = models.ManyToManyField(SeasonTeam, related_name='tournaments', blank=True)  # Squadre partecipanti
     current_match_day = models.PositiveIntegerField(default=1)  # Giorno corrente del torneo
     trophy = models.ForeignKey(Trophy, on_delete=models.SET_NULL, null=True, blank=True, related_name='tournaments')  # Trofeo associato
     is_active = models.BooleanField(default=True, help_text="Indica se il torneo è attivo")

@@ -16,5 +16,9 @@ class Team(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        tournaments = ", ".join([t.name for t in self.tournaments.all()])
-        return f"{self.name} ({tournaments})"
+        tournament_names = set()
+        for st in self.season_teams.all():
+            for tournament in st.tournaments.all():
+                tournament_names.add(tournament.name)
+        tournaments_str = ", ".join(tournament_names)
+        return f"{self.name} ({self.code}) - [{tournaments_str}]"

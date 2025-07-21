@@ -4,6 +4,20 @@ from django.contrib.auth.models import User
 from . import models
 
 
+class TeamFilter(admin.SimpleListFilter):
+    title = 'Squadra'
+    parameter_name = 'team'
+
+    def lookups(self, request, model_admin):
+        teams = models.Team.objects.all()
+        return [(team.id, team.name) for team in teams]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(teams__team__id=self.value())
+        return queryset
+
+
 @admin.register(models.Continent)
 class ContinentAdmin(admin.ModelAdmin):
     list_display = ("name", "code")
@@ -61,9 +75,13 @@ class TournamentStructureAdmin(admin.ModelAdmin):
 
 @admin.register(models.Tournament)
 class TournamentAdmin(admin.ModelAdmin):
-    list_display = ("name", "season", "current_match_day")
-    search_fields = ("name",)
-    list_filter = ("season", "structure")
+    list_display = ("name", "season", "current_match_day", "get_teams")
+    search_fields = ("name", "get_teams")
+    list_filter = ("season", "structure", TeamFilter)
+
+    def get_teams(self, obj):
+        return ", ".join([str(st.team.name) for st in obj.teams.all()])
+    get_teams.short_description = "Squadre"
 
 
 @admin.register(models.TournamentRule)
@@ -79,8 +97,9 @@ class TournamentQualificationRuleAdmin(admin.ModelAdmin):
 
 @admin.register(models.SeasonTeam)
 class SeasonTeamAdmin(admin.ModelAdmin):
-    list_display = ("team", "tournament")
-    list_filter = ("tournament",)
+    list_display = ("id", "team", "created_at")
+    search_fields = ("team__name",)
+    list_filter = ("team",)
 
 
 @admin.register(models.Player)

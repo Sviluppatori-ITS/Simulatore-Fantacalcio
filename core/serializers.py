@@ -225,7 +225,7 @@ class MatchSerializer(serializers.ModelSerializer):
 class TournamentSerializer(serializers.ModelSerializer):
     structure = TournamentStructureSerializer()
     season = SeasonSerializer()
-    teams = TeamSerializer(many=True)
+    teams = SeasonTeamSerializer(many=True)
     trophy = TrophySerializer()
 
     class Meta:
@@ -250,7 +250,7 @@ class TournamentSerializer(serializers.ModelSerializer):
         )
 
         for team_data in teams_data:
-            team, _ = models.Team.objects.get_or_create(**team_data)
+            team, _ = models.SeasonTeam.objects.get_or_create(**team_data)
             tournament.teams.add(team)
 
         return tournament
@@ -286,7 +286,7 @@ class TournamentSerializer(serializers.ModelSerializer):
         if teams_data is not None:
             team_instances = []
             for team_data in teams_data:
-                team, _ = models.Team.objects.get_or_create(**team_data)
+                team, _ = models.SeasonTeam.objects.get_or_create(**team_data)
                 team_instances.append(team)
             instance.teams.set(team_instances)  # sostituisce tutti i team
 
