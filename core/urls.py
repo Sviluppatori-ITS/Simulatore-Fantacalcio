@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (ContinentViewSet, LeagueViewSet, NationalityViewSet,
                     PlayerViewSet, RegisterView, SeasonViewSet, TeamViewSet,
-                    TournamentStructureViewSet, TrophyViewSet, SeasonTeamViewSet)
+                    TournamentStructureViewSet, TournamentViewSet, TrophyViewSet, SeasonTeamViewSet)
 
 router = DefaultRouter()
 router.register(r'leagues', LeagueViewSet)
@@ -11,7 +11,8 @@ router.register(r'teams', TeamViewSet)
 router.register(r'nationalities', NationalityViewSet)
 router.register(r'continent', ContinentViewSet)
 router.register(r'season', SeasonViewSet)
-router.register(r'tounament_structure', TournamentStructureViewSet)
+router.register(r'tournament_structure', TournamentStructureViewSet)
+router.register(r'tournament', TournamentViewSet)
 router.register(r'trophy', TrophyViewSet)
 router.register(r'player', PlayerViewSet)
 router.register(r'season_team', SeasonTeamViewSet)

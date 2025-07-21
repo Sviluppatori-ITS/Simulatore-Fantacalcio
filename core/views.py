@@ -8,18 +8,18 @@ from core.logger import get_logger
 
 from django.contrib.auth.models import User
 from .models import (Continent, League, Nationality, Player, Season, Team,
-                     TournamentStructure, Trophy, SeasonTeam)
+                     TournamentStructure, Trophy, SeasonTeam, Tournament)
 from .serializers import (ContinentSerializer, LeagueSerializer,
                           NationalitySerializer, PlayerSerializer,
                           SeasonSerializer, TeamSerializer,
                           TournamentStructureSerializer, TrophySerializer,
-                          SeasonTeamSerializer,
+                          SeasonTeamSerializer, TournamentSerializer,
                           UserSerializer)
 
 logger = get_logger()
 
 # IsAuthenticated or AllowAny based on your needs
-permission = IsAuthenticated
+permission = AllowAny
 
 
 class LeagueViewSet(viewsets.ModelViewSet):
@@ -94,6 +94,18 @@ class TournamentStructureViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+
+class TournamentViewSet(viewsets.ModelViewSet):
+    queryset = Tournament.objects.all()
+    serializer_class = TournamentSerializer
+    permission_classes = [permission]
+
+    def perform_create(self, serializer):
+        return super().perform_create(serializer)
+
+    def perform_update(self, serializer):
+        return super().perform_update(serializer)
 
 
 class RegisterSerializer(ModelSerializer):

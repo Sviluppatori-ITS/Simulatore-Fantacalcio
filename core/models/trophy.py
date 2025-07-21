@@ -15,4 +15,5 @@ class Trophy(models.Model):
         return self.awarded_to is not None
 
     def __str__(self):
-        return f"{self.name} - {self.awarded_to.name} ({self.tournament.name if self.tournament else 'No Tournament'})"
+        tournament = self.tournaments.first()
+        return f"{self.name} - {self.awarded_to.name if self.awarded_to else 'No Winner'} ({tournament.name if tournament else 'No Tournament'})"

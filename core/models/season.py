@@ -11,4 +11,4 @@ class Season(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.league.name} - Season {self.year} (Matchday {self.current_match_day})"
+        return f"{self.league.name} - Season {self.year}"

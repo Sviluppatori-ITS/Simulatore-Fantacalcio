@@ -192,3 +192,74 @@ class MatchSerializer(serializers.ModelSerializer):
         validated_data['away_team'] = away_team
 
         return models.Match.objects.create(**validated_data)
+
+
+class TournamentSerializer(serializers.ModelSerializer):
+    structure = TournamentStructureSerializer()
+    season = SeasonSerializer()
+    teams = TeamSerializer(many=True)
+    trophy = TrophySerializer()
+
+    class Meta:
+        model = models.Tournament
+        fields = '__all__'
+
+    def create(self, validated_data):
+        structure_data = validated_data.pop('structure')
+        season_data = validated_data.pop('season')
+        trophy_data = validated_data.pop('trophy')
+        teams_data = validated_data.pop('teams')
+
+        structure = models.TournamentStructure.objects.get_or_create(**structure_data)[0]
+        season = models.Season.objects.get_or_create(**season_data)[0]
+        trophy = models.Trophy.objects.get_or_create(**trophy_data)[0]
+
+        tournament = models.Tournament.objects.create(
+            structure=structure,
+            season=season,
+            trophy=trophy,
+            **validated_data
+        )
+
+        for team_data in teams_data:
+            team, _ = models.Team.objects.get_or_create(**team_data)
+            tournament.teams.add(team)
+
+        return tournament
+
+    def update(self, instance, validated_data):
+        structure_data = validated_data.pop('structure', None)
+        season_data = validated_data.pop('season', None)
+        trophy_data = validated_data.pop('trophy', None)
+        teams_data = validated_data.pop('teams', None)
+
+        # Aggiorna o crea struttura
+        if structure_data:
+            structure, _ = models.TournamentStructure.objects.get_or_create(**structure_data)
+            instance.structure = structure
+
+        # Aggiorna o crea season
+        if season_data:
+            season, _ = models.Season.objects.get_or_create(**season_data)
+            instance.season = season
+
+        # Aggiorna o crea trophy
+        if trophy_data:
+            trophy, _ = models.Trophy.objects.get_or_create(**trophy_data)
+            instance.trophy = trophy
+
+        # Aggiorna altri campi semplici
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+
+        # Aggiorna relazione ManyToMany con i team
+        if teams_data is not None:
+            team_instances = []
+            for team_data in teams_data:
+                team, _ = models.Team.objects.get_or_create(**team_data)
+                team_instances.append(team)
+            instance.teams.set(team_instances)  # sostituisce tutti i team
+
+        return instance

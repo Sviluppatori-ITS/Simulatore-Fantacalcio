@@ -12,7 +12,7 @@ class Tournament(models.Model):
     season = models.ForeignKey(Season, on_delete=models.CASCADE, related_name='tournament')
     teams = models.ManyToManyField(Team, related_name='tournaments', blank=True)  # Squadre partecipanti
     current_match_day = models.PositiveIntegerField(default=1)  # Giorno corrente del torneo
-    trophy = models.ForeignKey(Trophy, on_delete=models.SET_NULL, null=True, blank=True, related_name='tournament')  # Trofeo associato
+    trophy = models.ForeignKey(Trophy, on_delete=models.SET_NULL, null=True, blank=True, related_name='tournaments')  # Trofeo associato
     is_active = models.BooleanField(default=True, help_text="Indica se il torneo è attivo")
     start_date = models.DateField(null=True, blank=True, help_text="Data di inizio del torneo")
     end_date = models.DateField(null=True, blank=True, help_text="Data di fine del torneo")
@@ -23,4 +23,4 @@ class Tournament(models.Model):
     # tutto il resto può essere semplificato o spostato
 
     def __str__(self):
-        return f"{self.name} - {self.season.year} ({'Attivo' if self.season.is_active else 'Inattivo'})"
+        return f"{self.name} - {self.season.year} ({'Attivo - Giornata Corrente: ' + str(self.current_match_day) if self.is_active else 'Inattivo'})"
