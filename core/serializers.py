@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
+
 # from .models import League, Team, Nationality, Player, Continent, PlayerStatistics, Season, Trophy, TournamentStructure, Person
 from . import models
 
@@ -43,9 +44,23 @@ class TeamNestedSerializer(serializers.ModelSerializer):
 
 
 class SeasonTeamSerializer(serializers.ModelSerializer):
+    team = TeamSerializer()
+
     class Meta:
         model = models.SeasonTeam
         fields = '__all__'
+
+    def create(self, validated_data):
+        team_data = validated_data.pop('team')
+
+        team = models.Team.objects.get_or_create(**team_data)[0]
+
+        season_team = models.SeasonTeam.objects.create(
+            team=team,
+            **validated_data
+        )
+
+        return season_team
 
 
 class ContinentSerializer(serializers.ModelSerializer):
