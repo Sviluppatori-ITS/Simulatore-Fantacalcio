@@ -5,7 +5,7 @@ from itertools import combinations
 from django.db import transaction
 
 from core.logger import get_logger
-from core.models import (Match, Round, Season, Team, Tournament,
+from core.models import (Match, Round, Season, Team, SeasonTeam, Tournament,
                          TournamentQualificationRule, TournamentRule,
                          TournamentStructure)
 from core.services.standings import get_tournament_standings
@@ -62,7 +62,13 @@ class TournamentFactory:
             structure=self.structure,
             season=self.season,
         )
-        tournament.teams.set(self.teams)
+
+        season_teams = [
+            SeasonTeam.objects.get_or_create(team=team, season=self.season)[0]
+            for team in self.teams
+        ]
+        tournament.teams.set(season_teams)
+        self.teams = season_teams  # 🔁 così i metodi interni usano SeasonTeam
         self.logger.info(f"Torneo '{self.name}' creato con {len(self.teams)} squadre.")
 
         if self.structure.is_cup:

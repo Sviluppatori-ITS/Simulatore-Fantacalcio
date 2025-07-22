@@ -128,9 +128,9 @@ class SeasonTeamModelTest(TestCase):
         logger.info("SeasonTeam creato con successo")
         self.assertEqual(self.season_team.team, self.team)
         logger.info("Verifica team di SeasonTeam superata")
-        self.assertEqual(self.season_team.tournament, self.tournament)
+        self.assertEqual(self.season_team.tournaments, self.tournament)
         logger.info("Verifica torneo di SeasonTeam superata")
-        self.assertTrue(self.season_team.tournament.is_active)
+        self.assertTrue(self.season_team.tournaments.is_active)
         logger.info("Verifica is_active di SeasonTeam superata")
 
         self.assertEqual(self.tournament_ranking.squad_points(), 0)
