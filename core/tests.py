@@ -64,16 +64,15 @@ class PlayerModelTest(TestCase):
 class SeasonTeamModelTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-
         logger.info(f"[TEST RUN #{test_counter}] -> {cls.__name__}")
         print(f"\n[TEST RUN #{test_counter}] -> {cls.__name__}", flush=True)
 
         logger.info("Inizio setUpTestData per SeasonTeamModelTest")
-        # Crea migrazioni se necessario
+
         if not connection.introspection.table_names():
             logger.info("Nessuna tabella trovata, eseguo makemigrations")
             call_command('makemigrations', verbosity=0)
-        # Esegui migrazioni (solo necessario se usi workaround specifici)
+
         logger.info("Eseguo migrate")
         call_command('migrate', verbosity=0)
 
@@ -90,31 +89,37 @@ class SeasonTeamModelTest(TestCase):
         )
         logger.info("Creata Season: 2025")
 
+        cls.tournament_structure = TournamentStructure.objects.create(
+            is_cup=False,
+            use_groups=False,
+            home_and_away=False,
+            has_playoff=False,
+            relegation_enabled=False,
+        )
+
         cls.tournament = Tournament.objects.create(
             name="Torneo Test",
-            structure=TournamentStructure.objects.create(
-                is_cup=False,
-                use_groups=False,
-                home_and_away=False,
-                has_playoff=False,
-                relegation_enabled=False,
-            ),
+            structure=cls.tournament_structure,
             season=cls.season,
             is_active=True,
         )
+        logger.info("Creato Tournament: Torneo Test")
 
         cls.team = Team.objects.create(name="Team Test", owner=cls.user)
         logger.info("Creato Team: Team Test")
 
-        cls.season_team = SeasonTeam.objects.create(
-            team=cls.team,
-            tournament=cls.tournament,
-        )
+        cls.season_team = SeasonTeam.objects.create(team=cls.team)
+        logger.info("Creato SeasonTeam")
+
+        # Aggiungi la SeasonTeam al torneo
+        cls.tournament.teams.add(cls.season_team)
+        logger.info("Aggiunto SeasonTeam al Tournament")
 
         cls.tournament_ranking = TournamentRanking.objects.create(
             tournament=cls.tournament,
             team=cls.season_team,
         )
+        logger.info("Creato TournamentRanking")
 
     def test_season_team_creation(self):
         logger.info("Test: creazione SeasonTeam")
