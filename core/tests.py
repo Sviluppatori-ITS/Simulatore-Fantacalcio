@@ -128,9 +128,9 @@ class SeasonTeamModelTest(TestCase):
         logger.info("SeasonTeam creato con successo")
         self.assertEqual(self.season_team.team, self.team)
         logger.info("Verifica team di SeasonTeam superata")
-        self.assertEqual(self.season_team.tournaments, self.tournament)
+        self.assertEqual(list(self.season_team.tournaments.all()), [self.tournament])
         logger.info("Verifica torneo di SeasonTeam superata")
-        self.assertTrue(self.season_team.tournaments.is_active)
+        self.assertTrue(all(t.is_active for t in self.season_team.tournaments.all()))
         logger.info("Verifica is_active di SeasonTeam superata")
 
         self.assertEqual(self.tournament_ranking.squad_points(), 0)
@@ -331,5 +331,9 @@ class TournamentFactoryTest(TestCase):
         for round_obj in rounds:
             self.assertTrue(round_obj.matches.exists())
         logger.info("Ogni round della coppa ha almeno un match")
+
+        expected_matches = len(self.teams_serie_b) - 1  # in knockout puro
+        self.assertEqual(tournament.matches.count(), expected_matches)
+        logger.info("Calcolo coerenza numero di match")
 
     logger.info("Tutti i test di TournamentFactoryTest sono stati eseguiti con successo\n")

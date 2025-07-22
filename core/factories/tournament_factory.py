@@ -126,10 +126,11 @@ class TournamentFactory:
             self.logger.info(f"Creata giornata {giornata_counter} con {len(matches)} partite.")
             for home, away in matches:
                 match = Match.objects.create(
-                    home_team=home,
-                    away_team=away,
+                    home_team=home.team,  # .team per ottenere il Team da SeasonTeam
+                    away_team=away.team,
                     tournament=tournament
                 )
+
                 round_obj.matches.add(match)
             giornata_counter += 1
 
@@ -161,10 +162,11 @@ class TournamentFactory:
             for i in range(0, len(playing), 2):
                 home, away = playing[i], playing[i + 1]
                 match = Match.objects.create(
-                    home_team=home,
-                    away_team=away,
+                    home_team=home.team,  # .team per ottenere il Team da SeasonTeam
+                    away_team=away.team,
                     tournament=tournament
                 )
+
                 round_obj.matches.add(match)
 
             # Squadre che passano turno senza giocare restano nella lista corrente
@@ -233,8 +235,8 @@ class TournamentFactory:
         for i in range(0, len(current_teams), 2):
             home, away = current_teams[i], current_teams[i + 1]
             match = Match.objects.create(
-                home_team=home,
-                away_team=away,
+                home_team=home.team,
+                away_team=away.team,
                 tournament=tournament
             )
             round_obj.matches.add(match)
