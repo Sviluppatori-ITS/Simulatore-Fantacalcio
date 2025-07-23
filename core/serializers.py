@@ -18,6 +18,12 @@ class LeagueSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class SeasonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Season
+        fields = '__all__'
+
+
 class TeamSerializer(serializers.ModelSerializer):
     owner = UserSerializer()
 
@@ -45,6 +51,7 @@ class TeamNestedSerializer(serializers.ModelSerializer):
 
 class SeasonTeamSerializer(serializers.ModelSerializer):
     team = TeamSerializer()
+    season = SeasonSerializer()
 
     class Meta:
         model = models.SeasonTeam
@@ -52,12 +59,15 @@ class SeasonTeamSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         team_data = validated_data.pop('team')
+        season_data = validated_data.pop('season')
 
         team = models.Team.objects.get_or_create(**team_data)[0]
+        season = models.Season.objects.get_or_create(**season_data)[0]
 
         season_team = models.SeasonTeam.objects.create(
             team=team,
-            **validated_data
+            season=season
+            ** validated_data
         )
 
         return season_team
@@ -161,12 +171,6 @@ class PlayerSerializer(serializers.ModelSerializer):
 class PlayerStatisticsSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PlayerStatistics
-        fields = '__all__'
-
-
-class SeasonSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Season
         fields = '__all__'
 
 

@@ -19,8 +19,8 @@ from .serializers import (ContinentSerializer, LeagueSerializer,
 
 logger = get_logger()
 
-# IsAuthenticated or AllowAny based on your needs
-permission = IsSuperUser
+# IsAuthenticated, IsSuperUser or AllowAny based on your needs
+permission = AllowAny
 
 
 class LeagueViewSet(viewsets.ModelViewSet):

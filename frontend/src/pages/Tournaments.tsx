@@ -113,22 +113,55 @@ export default function Tournaments() {
                             </summary>
                             {t.teams?.length ? (
                                 <ul>
-                                    {t.teams.map(team => (
-                                        <li key={team.id}>
-                                            {team.name} ({team.code}){' '}
+                                    {t.teams.map(season_team => (
+                                        <li key={season_team.id}>
+                                            ID: {season_team.id} <br />
                                             <details>
                                                 <summary>
-                                                    <strong>Owner</strong>
+                                                    <strong>Team</strong>
                                                 </summary>
-                                                {team.owner ? (
-                                                    <ul>
-                                                        <li>ID: {team.owner.id}</li>
-                                                        <li>Username: {team.owner.username}</li>
-                                                        <li>Email: {team.owner.email}</li>
-                                                    </ul>
-                                                ) : (
-                                                    <p>Nessun owner</p>
-                                                )}
+                                                <ul>
+                                                    <li>
+                                                        {season_team.team.name} (
+                                                        {season_team.team.code})
+                                                        <details>
+                                                            <summary>
+                                                                <strong>Owner</strong>
+                                                            </summary>
+                                                            {season_team.team.owner ? (
+                                                                <ul>
+                                                                    <li>
+                                                                        ID:{' '}
+                                                                        {season_team.team.owner.id}
+                                                                    </li>
+                                                                    <li>
+                                                                        Username:{' '}
+                                                                        {
+                                                                            season_team.team.owner
+                                                                                .username
+                                                                        }
+                                                                    </li>
+                                                                    <li>
+                                                                        Email:{' '}
+                                                                        {
+                                                                            season_team.team.owner
+                                                                                .email
+                                                                        }
+                                                                    </li>
+                                                                </ul>
+                                                            ) : (
+                                                                <p>Nessun owner</p>
+                                                            )}
+                                                        </details>
+                                                    </li>
+                                                </ul>
+                                            </details>
+                                            <details>
+                                                <summary>
+                                                    <strong>Stagione</strong>
+                                                </summary>
+                                                Anno: {season_team.season.year} <br />
+                                                Attiva: {season_team.season.is_active ? 'Sì' : 'No'}
                                             </details>
                                         </li>
                                     ))}

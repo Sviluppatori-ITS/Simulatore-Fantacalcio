@@ -35,12 +35,23 @@ export interface Tournament {
     };
     teams?: {
         id: number;
-        name: string;
-        code: string;
-        owner?: {
+        season: {
             id: number;
-            username: string;
-            email: string;
+            year: number;
+            is_active: boolean;
+            created_at: string;
+            updated_at: string;
+            league: number;
+        };
+        team: {
+            id: number;
+            name: string;
+            code: string;
+            owner?: {
+                id: number;
+                username: string;
+                email: string;
+            };
         };
         created_at: string;
         updated_at: string;
