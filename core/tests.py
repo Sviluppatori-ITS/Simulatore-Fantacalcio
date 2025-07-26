@@ -1,3 +1,6 @@
+"""
+    Test per vedere se i modelli funzionano correttamente
+"""
 import logging
 import sys
 
