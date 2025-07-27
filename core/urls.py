@@ -1,3 +1,6 @@
+"""
+    Inserire qui le root degli url delle pagine del sito per quanto riguarda la parte delle api
+"""
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
