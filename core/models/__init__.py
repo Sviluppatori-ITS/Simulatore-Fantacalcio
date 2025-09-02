@@ -42,6 +42,13 @@ from .default_formation import DefaultFormation
 # 🔁 Trasferimenti
 from .transfer import Transfer
 
+# 🎮 Fantacalcio
+from .fanta_team import FantaTeam, FantaTeamPlayer
+from .fanta_league import FantaLeague, FantaLeagueRule
+from .fanta_lineup import FantaLineup, FantaLineupPlayer, FantaLineupSubstitution
+from .fanta_score import FantaScore
+from .market_transaction import MarketTransaction, AuctionBid
+
 __all__ = [
     # Geografia e Identità
     'Continent',
@@ -86,4 +93,16 @@ __all__ = [
 
     # Trasferimenti
     'Transfer',
+
+    # Fantacalcio
+    'FantaTeam',
+    'FantaTeamPlayer',
+    'FantaLeague',
+    'FantaLeagueRule',
+    'FantaLineup',
+    'FantaLineupPlayer',
+    'FantaLineupSubstitution',
+    'FantaScore',
+    'MarketTransaction',
+    'AuctionBid',
 ]

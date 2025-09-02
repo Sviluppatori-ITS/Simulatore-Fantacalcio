@@ -154,7 +154,7 @@ class MatchEventAdmin(admin.ModelAdmin):
 
 @admin.register(models.Round)
 class RoundAdmin(admin.ModelAdmin):
-    list_display = ("tournament", "label", "match_day", "knockout_stage")
+    list_display = ("tournament", "label", "number", "knockout_stage")
     list_filter = ("tournament", "knockout_stage")
 
 

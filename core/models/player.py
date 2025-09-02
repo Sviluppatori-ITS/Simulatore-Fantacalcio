@@ -1,13 +1,55 @@
 from django.db import models
+from django.utils import timezone
 from .person import Person
 
 
 class Player(models.Model):
+    # Dati base del giocatore
     person = models.OneToOneField(Person, on_delete=models.CASCADE, related_name='player_profile', help_text="Profilo del giocatore")
-    main_role = models.CharField(max_length=20, choices=[('P', 'Portiere'), ('D', 'Difensore'), ('C', 'Centrocampista'), ('A', 'Attaccante')], null=True, blank=True, help_text="Ruolo principale del giocatore")
+
+    # Ruoli
+    ROLE_CHOICES = [
+        # Portieri
+        ('P', 'Portiere'),
+
+        # Difensori
+        ('DC', 'Difensore Centrale'),
+        ('DS', 'Difensore Sinistro'),
+        ('DD', 'Difensore Destro'),
+        ('D', 'Difensore Generico'),
+
+        # Centrocampisti
+        ('CC', 'Centrocampista Centrale'),
+        ('CDC', 'Centrocampista Difensivo'),
+        ('COC', 'Centrocampista Offensivo'),
+        ('CS', 'Centrocampista Sinistro'),
+        ('CD', 'Centrocampista Destro'),
+        ('C', 'Centrocampista Generico'),
+
+        # Attaccanti
+        ('AS', 'Ala Sinistra'),
+        ('AD', 'Ala Destra'),
+        ('PC', 'Punta Centrale'),
+        ('A', 'Attaccante Generico'),
+    ]
+
+    main_role = models.CharField(max_length=20, choices=ROLE_CHOICES, null=True, blank=True, help_text="Ruolo principale del giocatore")
+    secondary_role = models.CharField(max_length=20, choices=ROLE_CHOICES, null=True, blank=True, help_text="Ruolo secondario del giocatore")
+
+    # Valori di mercato e statistiche generali
     overall = models.PositiveSmallIntegerField(default=50, help_text="Overall del giocatore, da 1 a 100")
     fanta_value = models.PositiveIntegerField(default=50000, help_text="Valore di fanta-mercato del giocatore")
     value = models.PositiveIntegerField(default=0, help_text="Valore di mercato del giocatore")
+
+    # Attributi per stato di forma e infortuni
+    fitness_level = models.PositiveSmallIntegerField(default=100, help_text="Livello di forma fisica (1-100)")
+    is_injured = models.BooleanField(default=False, help_text="Indica se il giocatore è infortunato")
+    injury_description = models.CharField(max_length=200, null=True, blank=True, help_text="Descrizione dell'infortunio")
+    return_date = models.DateField(null=True, blank=True, help_text="Data prevista di rientro dall'infortunio")
+
+    # Attributi per squalifiche
+    is_suspended = models.BooleanField(default=False, help_text="Indica se il giocatore è squalificato")
+    suspension_matches = models.PositiveSmallIntegerField(default=0, help_text="Numero di partite di squalifica rimanenti")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
