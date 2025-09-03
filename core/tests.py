@@ -91,8 +91,8 @@ class SeasonTeamModelTest(TestCase):
 
         cls.tournament_structure = TournamentStructure.objects.create(
             is_cup=False,
-            use_groups=False,
-            home_and_away=False,
+            format='league',
+            legs=1,
             has_playoff=False,
             relegation_enabled=False,
         )
@@ -179,8 +179,8 @@ class TournamentFactoryTest(TestCase):
 
         cls.league_structure_a = TournamentStructure.objects.create(
             is_cup=False,
-            use_groups=False,
-            home_and_away=True,
+            format='league',
+            legs=1,
             has_playoff=False,
             relegation_enabled=True,
             relegation_teams=3
@@ -188,8 +188,8 @@ class TournamentFactoryTest(TestCase):
 
         cls.league_structure_b = TournamentStructure.objects.create(
             is_cup=False,
-            use_groups=False,
-            home_and_away=True,
+            format='league',
+            legs=1,
             has_playoff=True,
             relegation_enabled=False,
             relegation_teams=0
@@ -225,8 +225,8 @@ class TournamentFactoryTest(TestCase):
 
         cls.cup_structure = TournamentStructure.objects.create(
             is_cup=True,
-            use_groups=False,
-            home_and_away=False
+            format='cup',
+            legs=1
         )
         logger.info("Creata TournamentStructure per coppa")
 
@@ -266,7 +266,7 @@ class TournamentFactoryTest(TestCase):
         logger.info("Ogni giornata ha almeno un match")
 
         # Verifica che il numero di match sia corretto
-        expected_matches = (len(self.teams_serie_a) * (len(self.teams_serie_a) - 1) * 2) // 2
+        expected_matches = (len(self.teams_serie_a) * (len(self.teams_serie_a) - 1)) // 2 * self.league_structure_a.legs
         self.assertEqual(tournament.matches.count(), expected_matches)
         logger.info(f"Numero di match creati: {tournament.matches.count()}")
 
@@ -301,7 +301,7 @@ class TournamentFactoryTest(TestCase):
         logger.info("Ogni giornata ha almeno un match")
 
         # Verifica che il numero di match sia corretto
-        expected_matches = (len(self.teams_serie_b) * (len(self.teams_serie_b) - 1) * 2) // 2
+        expected_matches = (len(self.teams_serie_b) * (len(self.teams_serie_b) - 1)) // 2 * self.league_structure_b.legs
         self.assertEqual(tournament.matches.count(), expected_matches)
         logger.info(f"Numero di match creati: {tournament.matches.count()}")
 
@@ -355,8 +355,8 @@ class TestTournamentFactory(TestCase):
         structure = TournamentStructure.objects.create(
             name="Serie A",
             is_cup=False,
+            format='league',
             has_playoff=False,
-            home_and_away=True,
             legs=2
         )
         teams = [
@@ -387,7 +387,7 @@ class TestTournamentFactory(TestCase):
         self.assertGreater(rounds.count(), 0)
 
         # Verifica che il numero di partite sia corretto (ogni squadra gioca contro tutte le altre)
-        expected_matches = len(teams) * (len(teams) - 1) if structure.home_and_away else len(teams) * (len(teams) - 1) // 2
+        expected_matches = len(teams) * (len(teams) - 1) if structure.legs > 1 else len(teams) * (len(teams) - 1) // 2
         matches = Match.objects.filter(tournament=tournament)
         self.assertEqual(matches.count(), expected_matches)
 
@@ -403,6 +403,7 @@ class TestTournamentFactory(TestCase):
         structure = TournamentStructure.objects.create(
             name="Coppa Italia",
             is_cup=True,
+            format='cup',
             has_playoff=False,
             legs=2  # Andata e ritorno
         )
@@ -449,8 +450,8 @@ class TestTournamentFactory(TestCase):
         structure_a = TournamentStructure.objects.create(
             name="Serie A",
             is_cup=False,
+            format='league',
             has_playoff=True,
-            home_and_away=True,
             relegation_enabled=True,
             relegation_teams=2,
             legs=2
@@ -458,8 +459,8 @@ class TestTournamentFactory(TestCase):
         structure_b = TournamentStructure.objects.create(
             name="Serie B",
             is_cup=False,
+            format='league',
             has_playoff=False,
-            home_and_away=True,
             legs=2
         )
 

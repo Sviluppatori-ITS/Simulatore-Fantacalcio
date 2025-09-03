@@ -63,6 +63,30 @@ export default function Tournaments() {
                                 <li>Coppa: {t.structure.is_cup ? 'Sì' : 'No'}</li>
                                 <li>Gironi: {t.structure.use_groups ? 'Sì' : 'No'}</li>
                                 <li>Andata/Ritorno: {t.structure.home_and_away ? 'Sì' : 'No'}</li>
+                                {/* I nuovi campi saranno visibili dopo l'aggiornamento dell'API */}
+                                {/* <li>Pareggi consentiti: {t.structure.allow_draws ? 'Sì' : 'No'}</li> */}
+                                {/* {!t.structure.allow_draws && (
+                                    <li>
+                                        Metodo di risoluzione pareggi: {
+                                            {
+                                                'penalties': 'Calci di rigore',
+                                                'extra_time': 'Tempi supplementari',
+                                                'extra_time_penalties': 'Tempi supplementari e rigori',
+                                                'replay': 'Ripetizione della partita',
+                                                'golden_goal': 'Golden goal'
+                                            }[t.structure.draw_resolution] || t.structure.draw_resolution
+                                        }
+                                    </li>
+                                )} */}
+                                {/* Questi campi saranno visibili dopo l'aggiornamento dell'API */}
+                                {/* <li>
+                                    Punti: {t.structure.POINTS_WIN} vittoria, {t.structure.POINTS_DRAW} pareggio, {t.structure.POINTS_LOSS} sconfitta
+                                </li>
+                                {!t.structure.allow_draws && (
+                                    <li>
+                                        Punti speciali: {t.structure.POINTS_WIN_SHOOTOUT} vittoria ai rigori, {t.structure.POINTS_LOSS_SHOOTOUT} sconfitta ai rigori, {t.structure.POINTS_WIN_EXTRA_TIME} vittoria ai supplementari
+                                    </li>
+                                )} */}
                                 <li>
                                     Playoff:{' '}
                                     {t.structure.has_playoff

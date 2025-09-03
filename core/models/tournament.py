@@ -74,6 +74,16 @@ class Tournament(models.Model):
                 self.is_registration_open() and
                 self.status == 'pending')
 
+    def allows_draws(self):
+        """Verifica se il torneo consente pareggi"""
+        return self.structure.allow_draws
+
+    def get_draw_resolution_method(self):
+        """Restituisce il metodo di risoluzione dei pareggi"""
+        if self.allows_draws():
+            return None
+        return self.structure.draw_resolution
+
     def __str__(self):
         status_label = {
             'pending': 'In attesa',

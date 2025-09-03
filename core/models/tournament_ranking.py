@@ -19,6 +19,8 @@ class TournamentRanking(models.Model):
     loss = models.PositiveIntegerField(default=0, help_text="Numero di sconfitte")
     win_penalty = models.PositiveIntegerField(default=0, help_text="Numero di vittorie ai rigori")
     loss_penalty = models.PositiveIntegerField(default=0, help_text="Numero di sconfitte ai rigori")
+    win_extra_time = models.PositiveIntegerField(default=0, help_text="Numero di vittorie ai tempi supplementari")
+    loss_extra_time = models.PositiveIntegerField(default=0, help_text="Numero di sconfitte ai tempi supplementari")
 
     # Statistiche gol
     goals_for = models.PositiveIntegerField(default=0, help_text="Gol segnati")
@@ -48,19 +50,35 @@ class TournamentRanking(models.Model):
     def calculate_points(self):
         """Calcola i punti totali in base alle regole del torneo"""
         base_points = 0
+
+        # Prima vediamo se ci sono regole specifiche
         rules = self.tournament.rules.filter(is_active=True)
 
-        for rule in rules:
-            if rule.rule_type == 'point_win':
-                base_points += self.win * rule.value
-            elif rule.rule_type == 'point_draw':
-                base_points += self.draw * rule.value
-            elif rule.rule_type == 'point_loss':
-                base_points += self.loss * rule.value
-            elif rule.rule_type == 'win_penalty':
-                base_points += self.win_penalty * rule.value
-            elif rule.rule_type == 'loss_penalty':
-                base_points -= self.loss_penalty * rule.value
+        if rules.exists():
+            # Se ci sono regole specifiche, le seguiamo
+            for rule in rules:
+                if rule.rule_type == 'point_win':
+                    base_points += self.win * rule.value
+                elif rule.rule_type == 'point_draw':
+                    base_points += self.draw * rule.value
+                elif rule.rule_type == 'point_loss':
+                    base_points += self.loss * rule.value
+                elif rule.rule_type == 'win_penalty':
+                    base_points += self.win_penalty * rule.value
+                elif rule.rule_type == 'loss_penalty':
+                    base_points -= self.loss_penalty * rule.value
+        else:
+            # Altrimenti usiamo le regole generali dalla struttura del torneo
+            structure = self.tournament.structure
+            base_points += self.win * structure.POINTS_WIN
+            base_points += self.draw * structure.POINTS_DRAW
+            base_points += self.loss * structure.POINTS_LOSS
+
+            # Aggiungiamo punti per vittorie/sconfitte ai rigori e ai tempi supplementari
+            base_points += self.win_penalty * structure.POINTS_WIN_SHOOTOUT
+            base_points += self.loss_penalty * structure.POINTS_LOSS_SHOOTOUT
+            base_points += self.win_extra_time * structure.POINTS_WIN_EXTRA_TIME
+            base_points += self.loss_extra_time * structure.POINTS_LOSS_EXTRA_TIME
 
         # Sottraiamo eventuali penalizzazioni
         total_points = base_points - self.points_penalty
@@ -94,6 +112,10 @@ class TournamentRanking(models.Model):
         self.win = 0
         self.draw = 0
         self.loss = 0
+        self.win_penalty = 0
+        self.loss_penalty = 0
+        self.win_extra_time = 0
+        self.loss_extra_time = 0
         self.goals_for = 0
         self.goals_against = 0
 
@@ -103,12 +125,34 @@ class TournamentRanking(models.Model):
                 self.goals_for += match.home_score
                 self.goals_against += match.away_score
 
-                if match.home_score > match.away_score:
-                    self.win += 1
-                elif match.home_score == match.away_score:
-                    self.draw += 1
+                # Se il torneo non consente pareggi, verifichiamo il vincitore considerando tempi supplementari/rigori
+                if match.home_score == match.away_score and not self.tournament.structure.allow_draws:
+                    # Determiniamo il vincitore in base al metodo di spareggio
+                    if match.extra_time_played:
+                        if match.home_score_extra_time > match.away_score_extra_time:
+                            self.win_extra_time += 1
+                        elif match.away_score_extra_time > match.home_score_extra_time:
+                            self.loss_extra_time += 1
+                        # Se ancora pareggio, verifichiamo i rigori
+                        elif match.penalties_played:
+                            if match.home_score_penalties > match.away_score_penalties:
+                                self.win_penalty += 1
+                            else:
+                                self.loss_penalty += 1
+                    # Se solo rigori senza supplementari
+                    elif match.penalties_played:
+                        if match.home_score_penalties > match.away_score_penalties:
+                            self.win_penalty += 1
+                        else:
+                            self.loss_penalty += 1
                 else:
-                    self.loss += 1
+                    # Gestione normale per partite con risultato definito
+                    if match.home_score > match.away_score:
+                        self.win += 1
+                    elif match.home_score == match.away_score:
+                        self.draw += 1
+                    else:
+                        self.loss += 1
 
         # Conta vittorie, pareggi, sconfitte e gol per partite in trasferta
         for match in away_matches:
@@ -116,15 +160,37 @@ class TournamentRanking(models.Model):
                 self.goals_for += match.away_score
                 self.goals_against += match.home_score
 
-                if match.away_score > match.home_score:
-                    self.win += 1
-                elif match.away_score == match.home_score:
-                    self.draw += 1
+                # Se il torneo non consente pareggi, verifichiamo il vincitore considerando tempi supplementari/rigori
+                if match.home_score == match.away_score and not self.tournament.structure.allow_draws:
+                    # Determiniamo il vincitore in base al metodo di spareggio
+                    if match.extra_time_played:
+                        if match.away_score_extra_time > match.home_score_extra_time:
+                            self.win_extra_time += 1
+                        elif match.home_score_extra_time > match.away_score_extra_time:
+                            self.loss_extra_time += 1
+                        # Se ancora pareggio, verifichiamo i rigori
+                        elif match.penalties_played:
+                            if match.away_score_penalties > match.home_score_penalties:
+                                self.win_penalty += 1
+                            else:
+                                self.loss_penalty += 1
+                    # Se solo rigori senza supplementari
+                    elif match.penalties_played:
+                        if match.away_score_penalties > match.home_score_penalties:
+                            self.win_penalty += 1
+                        else:
+                            self.loss_penalty += 1
                 else:
-                    self.loss += 1
+                    # Gestione normale per partite con risultato definito
+                    if match.away_score > match.home_score:
+                        self.win += 1
+                    elif match.away_score == match.home_score:
+                        self.draw += 1
+                    else:
+                        self.loss += 1
 
         # Aggiorna il totale partite giocate
-        self.matches_played = self.win + self.draw + self.loss + self.win_penalty + self.loss_penalty
+        self.matches_played = self.win + self.draw + self.loss + self.win_penalty + self.loss_penalty + self.win_extra_time + self.loss_extra_time
 
         # Calcola i punti
         self.calculate_points()

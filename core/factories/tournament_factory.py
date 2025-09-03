@@ -219,7 +219,7 @@ class TournamentFactory:
         matchups = list(combinations(self.teams, 2))
 
         # Se è un campionato con andata e ritorno, aggiungi anche le partite con le squadre invertite
-        if self.structure.home_and_away:
+        if self.structure.legs > 1:
             matchups += [(away, home) for home, away in matchups]
 
         # Mescoliamo le partite per avere un calendario più vario
@@ -248,7 +248,10 @@ class TournamentFactory:
                 match = Match.objects.create(
                     home_team=home.team,  # .team per ottenere il Team da SeasonTeam
                     away_team=away.team,
-                    tournament=tournament
+                    tournament=tournament,
+                    # Se il torneo richiede tempi supplementari o rigori in caso di pareggio, lo impostiamo qui
+                    extra_time_played=False,
+                    penalties_played=False
                 )
                 round_obj.matches.add(match)
             giornata_counter += 1

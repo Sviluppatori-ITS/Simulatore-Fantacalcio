@@ -27,8 +27,8 @@ class TestTournamentFactory(TestCase):
         structure = TournamentStructure.objects.create(
             name="Serie A",
             is_cup=False,
+            format='league',
             has_playoff=False,
-            home_and_away=True,
             legs=2
         )
         teams = [
@@ -59,7 +59,7 @@ class TestTournamentFactory(TestCase):
         self.assertGreater(rounds.count(), 0)
 
         # Verifica che il numero di partite sia corretto (ogni squadra gioca contro tutte le altre)
-        expected_matches = len(teams) * (len(teams) - 1) if structure.home_and_away else len(teams) * (len(teams) - 1) // 2
+        expected_matches = len(teams) * (len(teams) - 1) if structure.legs > 1 else len(teams) * (len(teams) - 1) // 2
         matches = Match.objects.filter(tournament=tournament)
         self.assertEqual(matches.count(), expected_matches)
 
@@ -75,6 +75,7 @@ class TestTournamentFactory(TestCase):
         structure = TournamentStructure.objects.create(
             name="Coppa Italia",
             is_cup=True,
+            format='cup',
             has_playoff=False,
             legs=2  # Andata e ritorno
         )
@@ -121,8 +122,8 @@ class TestTournamentFactory(TestCase):
         structure_a = TournamentStructure.objects.create(
             name="Serie A",
             is_cup=False,
+            format='league',
             has_playoff=True,
-            home_and_away=True,
             relegation_enabled=True,
             relegation_teams=2,
             legs=2
@@ -130,8 +131,8 @@ class TestTournamentFactory(TestCase):
         structure_b = TournamentStructure.objects.create(
             name="Serie B",
             is_cup=False,
+            format='league',
             has_playoff=False,
-            home_and_away=True,
             legs=2
         )
 

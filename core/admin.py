@@ -69,8 +69,38 @@ class TrophyAdmin(admin.ModelAdmin):
 
 @admin.register(models.TournamentStructure)
 class TournamentStructureAdmin(admin.ModelAdmin):
-    list_display = ("is_cup", "use_groups", "home_and_away")
-    list_filter = ("is_cup", "use_groups")
+    list_display = ("name", "format", "is_cup", "legs", "allow_draws", "draw_resolution")
+    list_filter = ("is_cup", "allow_draws", "format")
+
+    fieldsets = (
+        ("Informazioni di base", {
+            "fields": ("name", "format", "is_cup", "legs")
+        }),
+        ("Fasi aggiuntive", {
+            "fields": ("has_playoff", "has_playout", "has_knockout_stage")
+        }),
+        ("Qualificazione", {
+            "fields": (
+                "relegation_enabled", "relegation_teams", "promotion_teams",
+                "playoff_teams", "playout_teams", "qualification_spots"
+            )
+        }),
+        ("Regole punteggio", {
+            "fields": ("POINTS_WIN", "POINTS_DRAW", "POINTS_LOSS")
+        }),
+        ("Gestione pareggi", {
+            "fields": (
+                "allow_draws", "draw_resolution", "POINTS_WIN_SHOOTOUT",
+                "POINTS_LOSS_SHOOTOUT", "POINTS_WIN_EXTRA_TIME", "POINTS_LOSS_EXTRA_TIME"
+            )
+        }),
+        ("Criteri di spareggio", {
+            "fields": (
+                "tiebreaker_head_to_head", "tiebreaker_goal_difference",
+                "tiebreaker_goals_scored", "tiebreaker_away_goals"
+            )
+        })
+    )
 
 
 @admin.register(models.Tournament)
